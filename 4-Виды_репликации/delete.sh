@@ -7,4 +7,4 @@ done
 
 for SUBNET_NAME in $(yc vpc subnet list --format=json | jq -r '.[].name' | grep otus); do yc vpc subnet delete $SUBNET_NAME; done
 
-for NET_NAME in $(yc vpc subnet list --format=json | jq -r '.[].name' | grep otus); do yc vpc network delete $NET_NAME; done
+for NET_NAME in $(yc vpc network list --format=json | jq -r '.[].name' | grep otus); do yc vpc network delete $NET_NAME; done
