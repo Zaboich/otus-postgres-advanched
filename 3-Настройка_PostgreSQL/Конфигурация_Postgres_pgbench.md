@@ -206,13 +206,6 @@ pgbench — утилита нагрузочного тестирования Pos
 pgbench — это встроенная утилита PostgreSQL для проведения стресс-тестов и оценки производительности СУБД. 
 Она эмулирует параллельную работу множества клиентов, выполняя заданные SQL-запросы, и рассчитывает ключевые метрики производительности, главным образом TPS
 
-Постепенное увеличение нагрузки
-
-```shell
-for clients in 4 8 16 32 64; do \
-sudo -u postgres pgbench -c $clients -j 4 -T 60 -P 10 postgres; \ 
-done
-```
 
 Запуск со своим скриптом 
 ```
@@ -227,7 +220,98 @@ UPDATE pgbench_accounts SET abalance = abalance + 100 WHERE aid = :aid;
 COMMIT;
 ```
 
+Постепенное увеличение нагрузки
+
+```shell
+for clients in 4 8 16 32 64; do \
+sudo -u postgres pgbench -c $clients -j 4 -T 60 -P 10 postgres; \ 
+done
+```
+
+Результат запуска на свежеустановленной Postgres 18 / Ubuntu 24.04
+```
+clients 4:
+
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 4
+number of threads: 4
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 34913
+number of failed transactions: 0 (0.000%)
+latency average = 6.873 ms
+latency stddev = 9.257 ms
+initial connection time = 10.396 ms
+tps = 581.927453 (without initial connection time)
+
+clients 8:
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 42526
+number of failed transactions: 0 (0.000%)
+latency average = 11.283 ms
+latency stddev = 14.227 ms
+initial connection time = 19.398 ms
+tps = 708.747188 (without initial connection time)
+
+clients 16:
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 16
+number of threads: 4
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 55498
+number of failed transactions: 0 (0.000%)
+latency average = 17.291 ms
+latency stddev = 27.001 ms
+initial connection time = 34.988 ms
+tps = 924.788568 (without initial connection time)
+
+clients 32:
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 32
+number of threads: 4
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 61079
+number of failed transactions: 0 (0.000%)
+latency average = 31.429 ms
+latency stddev = 36.791 ms
+initial connection time = 64.173 ms
+tps = 1016.433188 (without initial connection time)
+
+clients 64:
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10
+query mode: simple
+number of clients: 64
+number of threads: 4
+maximum number of tries: 1
+duration: 60 s
+number of transactions actually processed: 47710
+number of failed transactions: 0 (0.000%)
+latency average = 80.397 ms
+latency stddev = 126.016 ms
+initial connection time = 138.683 ms
+tps = 794.714289 (without initial connection time)
+
+```
+
+
 ## Далее генерируем необходимые параметры в pgtune
+https://github.com/le0pard/pgtune
+https://habr.com/ru/articles/217073/
 --И вставляем их в папку conf.d заранее прописав ее в параметры
 
 --`CONFIG FILE INCLUDES` (postgresql.conf)
