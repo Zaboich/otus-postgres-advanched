@@ -1,0 +1,21 @@
+services:
+    server:
+        image: postgres:18-alpine
+        environment:
+            - POSTGRES_DB=otus1
+            - POSTGRES_PASSWORD=otus2password
+            - POSTGRES_USER=otus
+        volumes:
+            - /var/lib/postgres:/var/lib/postgresql:rw
+        ports:
+            - 0.0.0.0:5432:5432
+    client:
+        image: postgres:18-alpine
+        depends_on:
+            - server
+        command: bash
+        tty: true
+        environment:
+            - PGPASSWORD=otus2password
+
+

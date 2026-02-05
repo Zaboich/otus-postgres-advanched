@@ -1,0 +1,13 @@
+services:
+  ubuntu:
+    tty: true
+    image: ubuntu:26.04
+#    user: ubuntu
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh
+#    entrypoint: /entrypoint.sh
+#    ports:
+#      - 127.0.0.1:5432:5432
+
+
+
