@@ -347,8 +347,8 @@ psql -h localhost -U postgres -w -d demo -c "SELECT count(1) FROM boarding_passe
 
 Остановка и удаление VM в ЯО
 ```
-yc compute instance delete vm-otus1 &&\
 yc compute instance delete vm-otus2 &&\
+yc compute instance delete vm-otus1 &&\
 yc vpc subnet delete subnet-otus1 &&\
 yc vpc network delete net-otus1
 

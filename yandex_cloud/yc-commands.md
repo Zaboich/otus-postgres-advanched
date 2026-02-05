@@ -1,15 +1,32 @@
 Cоздать Net subNet
+```
 yc vpc network create --name net-otus1
 yc vpc subnet create --name subnet-otus1 --range 192.168.1.0/24 --network-name net-otus1
-
+```
 Создать VM
+```
 yc compute instance create --name vm-otus1 --hostname vm-otus1 --cores 2 --memory 4 \
 --create-boot-disk size=15G,type=network-hdd,image-folder-id=standard-images,image-family=ubuntu-2404-lts \
 --network-interface subnet-name=subnet-otus1,nat-ip-version=ipv4 --ssh-key ~/.ssh/id_rsa.pub
-
+```
+Удаление
+```
+yc compute instance delete vm-otus1 &&\
+yc compute instance delete vm-otus2 &&\
+yc vpc subnet delete subnet-otus1 &&\
+yc vpc network delete net-otus1
+```
+Реестр 
+```
+yc compute instance list
+yc vpc subnet list
+yc vpc network list
+```
+Подключится
+```
 ADDR_VM1=$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print $2}') && \
 ssh  -o StrictHostKeyChecking=no yc-user@$ADDR_VM1
-
+```
 yc compute disk-type list
 
 yc compute disk create \

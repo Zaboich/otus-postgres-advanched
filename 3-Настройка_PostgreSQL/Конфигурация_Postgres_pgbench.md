@@ -381,8 +381,3 @@ select * from pg_file_settings where name='work_mem';
 --initial connection time = 86.111 ms
 --tps = 411.643884 (without initial connection time)
 
--- Удаляем вм, сети и переменную:
-```
-yc compute instance delete otus-vm && yc vpc subnet delete otus-subnet && yc vpc network delete otus-net && unset vm_ip_address
-```
-
