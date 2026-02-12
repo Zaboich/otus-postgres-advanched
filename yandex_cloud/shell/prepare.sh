@@ -9,6 +9,8 @@ if [ -z "$QUANTITY" ]; then
 fi
 QUANTITY=${QUANTITY:-1}
 
+read -p "Установить Postgres? Y/N [N]: " IS_INSTALL
+
 NET="net-${NAMESPACE}"
 SUBNET="subnet-${NAMESPACE}"
 if ! yc vpc network show --name ${NET} 2>/dev/null; then
@@ -24,6 +26,7 @@ if ! yc vpc subnet show --name ${SUBNET} 2>/dev/null; then
 else
   echo "Работает subnet ${SUBNET}"
 fi
+
 echo "Создаются $QUANTITY VM"
 for NUM in $(seq 1 1 $QUANTITY); do
   VM_NAME="vm-${NAMESPACE}${NUM}"
@@ -35,6 +38,8 @@ for NUM in $(seq 1 1 $QUANTITY); do
   fi
 done
 
+if [[ "$IS_INSTALL" != "Y" && "$IS_INSTALL" != "y" ]]; then echo "ADDR_VM1=\$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print \$2}') && ssh  -o StrictHostKeyChecking=no yc-user@\$ADDR_VM1 "; exit 0;fi
+
 for NUM in $(seq 1 1 $QUANTITY); do
   VM_NAME="vm-${NAMESPACE}${NUM}"
   IP_VM=$(yc compute instance show --name ${VM_NAME} | grep -E ' +address' | tail -n 1 | awk '{print $2}')
@@ -42,3 +47,5 @@ for NUM in $(seq 1 1 $QUANTITY); do
   ssh -o StrictHostKeyChecking=no yc-user@${IP_VM} 'bash -s ' < ./install_postgresql.sh
   echo "Подготовлена ${VM_NAME}"
 done
+
+echo "ADDR_VM1=\$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print \$2}') && ssh  -o StrictHostKeyChecking=no yc-user@\$ADDR_VM1 "
