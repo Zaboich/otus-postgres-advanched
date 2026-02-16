@@ -60,7 +60,7 @@ export PGPASSWORD=postgres
 sudo -u postgres psql -c "alter user postgres password '${PGPASSWORD}';"
 
 echo "localhost:5432:*:postgres:${PGPASSWORD}" > .pgpass
-`chmod 0600 ~/.pgpass`
+chmod 0600 ~/.pgpass
 ```
 
 Скачиваю файл "Демонстрационная база данных" PostgresPro 
