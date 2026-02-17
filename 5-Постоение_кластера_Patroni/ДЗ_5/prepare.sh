@@ -9,6 +9,9 @@ if [ -z "$QUANTITY" ]; then
 fi
 QUANTITY=${QUANTITY:-1}
 
+QUANT_ETCD=$(($QUANTITY/2))
+QUANT_POSTGRES=$(($QUANTITY/2))
+
 read -p "Установить Postgres? Y/N [N]: " IS_INSTALL
 
 NET="net-${NAMESPACE}"
@@ -55,10 +58,16 @@ done
 export ADDR_VM
 
 if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
-  for NUM in $(seq 1 1 $QUANTITY); do
-    echo "Установка Posgresql ${VM_NAME} ";
+  for NUM in $(seq 1 1 $QUANT_ETCD); do
+    echo "Установка ETCD vm-${NAMESPACE}${NUM} ";
+    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_etcd.sh;
+    echo "Подготовлен ETCD ${VM_NAME}";
+  done;
+
+  for NUM in $(seq $(($QUANT_ETCD + 1)) 1 $QUANTITY); do
+    echo "Установка Posgresql vm-${NAMESPACE}${NUM} ";
     ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh;
-    echo "Подготовлена ${VM_NAME}";
+    echo "Подготовлен POSTGRES ${VM_NAME}";
   done;
 fi
 

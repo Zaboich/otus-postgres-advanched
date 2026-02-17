@@ -1,0 +1,18 @@
+scope: otus_cluster
+namespace: /patroni
+name: patroni1
+restapi:
+  listen: 192.168.1.11:8008
+  connect_address: 192.168.1.11:8008
+etcd:
+  hosts: hostname1:2379, hostname2:2379,hostname3:2379
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+  postgresql:
+    use_pg_rewind: true
+    parameters:
+      autovacuum_analyze_scale_factor: 0.01

@@ -1,7 +1,20 @@
 #!/bin/bash
 set -e
+export DEBIAN_FRONTEND=noninteractive
+export LC_ALL="ru_RU.UTF-8,"
+export LANGUAGE="ru_RU.UTF-8"
+export LANG="ru_RU.UTF-8"
+export LC_TIME="ru_RU.UTF-8"
+export LC_MONETARY="ru_RU.UTF-8"
+export LC_ADDRESS="ru_RU.UTF-8"
+export LC_TELEPHONE="ru_RU.UTF-8"
+export LC_NAME="ru_RU.UTF-8"
+export LC_MEASUREMENT="ru_RU.UTF-8"
+export LC_IDENTIFICATION="ru_RU.UTF-8"
+export LC_NUMERIC="ru_RU.UTF-8"
+export LC_PAPER="ru_RU.UTF-8"
 
-sudo apt install -y -q etcd-server etcd-client
+sudo apt install -y --quiet etcd-server etcd-client mc
 
 # Параметры конфигурации можно задавать через env или файл /etc/default/etcd
 
@@ -35,11 +48,11 @@ ETCD_HEARTBEAT_INTERVAL='2000'
 ETCD_ENABLE_V2='true'
 " | sudo tee /etc/default/etcd
 
-sudo systemctl start etcd
+#sudo systemctl start etcd
 
-etcdctl endpoint health --cluster
+#etcdctl endpoint health --cluster
 
-etcdctl endpoint status --cluster -w table
+#etcdctl endpoint status --cluster -w table
 
 #for NUM in $(seq 1 1 3); do
 #  VM_NAME = "vm-otus${NUM}"

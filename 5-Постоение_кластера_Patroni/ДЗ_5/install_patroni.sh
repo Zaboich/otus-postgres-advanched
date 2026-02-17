@@ -1,13 +1,22 @@
 #!/bin/bash
 set -e
 
-sudo apt install -y -q python3-venv python-is-python3
+sudo apt install -y -qq python3-venv python-is-python3 >> /dev/null
 
 sudo mkdir -p /opt/patroni
-sudo chown postgres:postgres /opt/patroni
-sudo -u postgres python -m venv /opt/patroni/.venv
-sudo -u postgres /opt/patroni/.venv/bin/pip install 'patroni[etcd3]'
-sudo -u postgres /opt/patroni/.venv/bin/pip install 'psycopg2-binary'
+sudo mkdir -p /etc/patroni
+sudo mkdir -p /var/log/patroni
+
+python -m venv /opt/patroni/.venv
+source /opt/patroni/.venv/bin/activate
+
+pip install --upgrade pip
+
+pip install 'patroni[etcd3]'
+pip install 'psycopg2-binary'
+deactivate
+
+chown -R postgres:postgres /opt/patroni
 
 # общая часть имён хостов
 HOSTNAME=$(hostname)
