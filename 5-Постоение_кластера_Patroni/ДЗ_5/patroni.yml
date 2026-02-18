@@ -1,18 +1,90 @@
-scope: otus_cluster
+scope: patroni_otus_cluster
 namespace: /patroni
-name: patroni1
+name: patroni_{HOSTNAME} # Изменить на 2 ноде
+log:
+  level: DEBUG
+  dir: /var/log/patroni
+  file_size: 50000000
+  file_num: 10
 restapi:
-  listen: 192.168.1.11:8008
-  connect_address: 192.168.1.11:8008
+  listen: 0.0.0.0:8008
+  connect_address: {IP_ADDR}:8008 # Изменить на 2 ноде
+  verify_client: optional
 etcd:
-  hosts: hostname1:2379, hostname2:2379,hostname3:2379
+  hosts: ["{HOSTNAME_ETCD1}:2379", "{HOSTNAME_ETCD2}:2379", "{HOSTNAME_ETCD2}:2379"]
+watchdog:
+  mode: off # Если настроен, можно включить
 bootstrap:
   dcs:
+    failsafe_mode: true
     ttl: 30
     loop_wait: 10
     retry_timeout: 10
     maximum_lag_on_failover: 1048576
+    synchronous_mode: true
+    synchronous_mode_strict: true
+    synchronous_mode_count: 1
+    master_start_timeout: 30
+    slots:
+      slot_replica:
+        type: physical
   postgresql:
     use_pg_rewind: true
+    use_slots: true
     parameters:
-      autovacuum_analyze_scale_factor: 0.01
+      shared_buffers: '512MB'
+      wal_level: 'replica'
+      wal_keep_size: '512MB'
+      max_connections: 100
+      effective_cache_size: '1GB'
+      maintenance_work_mem: '256MB'
+      max_wal_senders: 5
+      max_replication_slots: 5
+      checkpoint_completion_target: 0.7
+      timezone: 'Europe/Moscow'
+      lc_messages: 'C.UTF-8'
+      password_encryption: 'scram-sha-256'
+      superuser_reserved_connections: 3
+      synchronous_commit: 'on'
+      synchronous_standby_names: '*'
+      hot_standby: 'on'
+      compute_query_id: 'on'
+  pg_hba:
+    - local all all peer
+    - host all all 0.0.0.0/0 scram-sha-256
+    - host replication replicator 127.0.0.1/32 scram-sha-256
+    - host replication replicator 192.168.0.0/24 scram-sha-256
+#  initdb: ["encoding=UTF8", "data-checksums", "username=postgres", "auth=scram-sha-256"]
+#  users:
+#    admin:
+#      password: 'new_secure_password1'
+#      options: ["createdb"]
+postgresql:
+  listen: 0.0.0.0
+  connect_address: {IP_ADDR}:5432
+  use_unix_socket: true
+  data_dir: /var/lib/postgresql/18/main
+  config_dir: /var/lib/postgresql/18/main
+  bin_dir: /usr/lib/postgresql/18/bin
+#  pgpass: /home/postgres/.pgpass_patroni
+  authentication:
+    replication:
+      username: replicator
+      password: 'password'
+    superuser:
+      username: postgres
+      password: 'postgres'
+    rewind:
+      username: postgres
+      password: 'postgres'
+  parameters:
+    unix_socket_directories: "/var/run/postgresql"
+  create_replica_methods: ["basebackup"]
+  basebackup:
+    max-rate: 100M
+    checkpoint: fast
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

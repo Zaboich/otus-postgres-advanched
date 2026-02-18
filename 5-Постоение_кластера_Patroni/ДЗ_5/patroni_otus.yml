@@ -16,3 +16,38 @@ bootstrap:
     use_pg_rewind: true
     parameters:
       autovacuum_analyze_scale_factor: 0.01
+  initdb:
+    - encoding: UTF8
+  pg_hba:
+    - host replication replicator 127.0.0.1/8 md5
+    - host replication replicator 192.168.1.11 md5
+    - host replication replicator 192.168.1.12 md5
+    - host all all 0.0.0.0/0 md5
+  users:
+    admin:
+      password: Пароль админа
+      options:
+        - createrole
+        - createdb
+postgresql:
+  listen: 127.0.0.1, 192.168.1.11 :5432
+  connect_address: 192.168.1.11 :5432
+  data_dir: /var/lib/postgresql/18/main
+  bin_dir: /usr/lib/postgresql/18/bin
+  authentication:
+    replication:
+      username: replicator
+      password: Пароль
+    superuser:
+      username: postgres
+      password: Пароль
+    rewind:
+      username: rewind_user
+      password: Пароль
+  parameters:
+    unix_socket_directories: "/var/run/postgresql"
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false
