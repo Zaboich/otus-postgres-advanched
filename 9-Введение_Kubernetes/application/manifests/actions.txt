@@ -1,0 +1,222 @@
+ Pod,  
+ ReplicaSet, 
+ Deployment, 
+ Service, 
+ Ingress.
+ 
+---------------------- 
+ 
+StatefulSet, 
+ConfigMap, 
+Persistent Volume, 
+Persistent Volume Claim. 
+
+----------------------
+ 
+ 
+minikube start
+minikube dashboard 
+ 
+ 
+docker build -t pg_kub1_app:v1 .
+
+kubectl create namespace pg-kub1
+kubectl config set-context --current --namespace=pg-kub1
+
+Все поды 
+kubectl get pods -A
+
+Поды в текущем namespace
+kubectl get pods
+
+kubectl apply -f pod.yaml
+kubectl get pods
+ 
+Все плохо - локальный докер!
+kubectl delete -f pod.yaml
+
+minikube docker-env
+Копируем и выполняем его выхлоп
+
+Заново билдим
+docker build -t pg_kub1_app:v2 .
+
+Заново запускаем
+kubectl apply -f pod.yaml
+
+Как посмотреть?
+minikube ssh
+curl ip
+
+
+kubectl port-forward hello-demo 8000:80
+открываем в браузере localhost:8000
+
+=========== Реплика
+kubectl apply -f rs.yaml
+
+Грохаем 
+kubectl delete pod xxx
+
+Смотрим
+
+Меняем число подов
+kubectl apply -f rs.yaml
+Смотрим
+
+Меняем число подов
+kubectl apply -f rs.yaml
+Смотрим
+
+Грохаем
+kubectl delete -f rs.yaml
+Смотрим - грохнулись и поды
+
+=========== деплоймент
+kubectl apply -f deployment.yaml
+
+Меняем версию, билдим образ
+docker build -t pg_kub1_app:v2 .
+
+kubectl set image deployment/hello-deployment hello-py=pg_kub1_app:v2 --record
+Смотрим поды - создаются новые, удаляются старые
+
+Смотрим реплики - создалась новая, а старая - 0 подов
+
+kubectl rollout history deployment/hello-deployment
+
+kubectl rollout undo deployment hello-deployment
+Смотрим реплики - наоборот
+
+
+========= сервис
+ClusterIP
+kubectl apply -f service.yaml
+
+
+minikube service hello-service --url -n pg-kub1
+Жмем f5 в браузере - разные ноды!
+
+========== ingress
+minikube addons enable ingress
+
+kubectl apply -f ingress.yaml
+minikube tunnel
+
+localhost/myapp
+localhost/myapp/health
+
+
+
+=========== ConfigSet
+
+minikube docker-env, применим выхлоп
+docker build -t pg_kub2_config:v2 .
+
+exp>kubectl apply -f app.yaml
+
+exp>kubectl port-forward configmap-demo-pod 8000:80
+
+меняем конфиг через дашбоард, проверяем выхлоп в браузере - нет изменений
+
+рестарт пода
+kubectl get pod configmap-demo-pod -o yaml | kubectl replace --force -f -
+
+kubectl port-forward configmap-demo-pod 8000:80
+смотрим конфиг
+
+============= Secret
+
+exp>kubectl delete -f app.yaml
+exp>kubectl apply -f app-secret.yaml
+
+kubectl create secret generic mysecret --from-literal=username=devuser --from-literal=password=secret_password
+kubectl get secrets
+kubectl describe secrets/mysecret
+kubectl get secret mysecret -o jsonpath='{.data}'
+
+https://www.base64decode.org/
+
+exp>kubectl port-forward configmap-demo-pod 8000:80
+смотрим в браузере
+смотрим в поде в дашборде - значения открыты
+
+kubectl delete -f app-secret.yaml
+kubectl delete secret mysecret
+
+============== PersistentVolume
+
+persistentVolume\app> docker build -t pg_kub2_pers:v1 .
+
+persistentVolume>kubectl apply -f infra.yaml
+persistentVolume>kubectl apply -f deployment.yaml
+
+minikube service persistent-service --url -n pg-kub2
+
+http://127.0.0.1:58973/
+http://127.0.0.1:58973/set?data=some_data
+http://127.0.0.1:58973/
+
+minikube ssh
+ls /tmp/hostpath-provisioner/exp/storage
+cat /tmp/hostpath-provisioner/exp/storage/state.txt
+
+============== StatefulSet
+
+kubectl apply -f stateful.yaml
+Смотрим поды и клаймы в дашбоарде
+
+kubectl port-forward  statefulset-app-0  8000:80
+kubectl port-forward  statefulset-app-1  8001:80
+
+localhost:8000/set?data=data1
+localhost:8001/set?data=data2
+
+грохаем в дашбоарде statefulset-app-0, наблюдаем
+грохаем под деплоймента, наблюдаем 
+
+=============== Postgres
+
+postgres>kubectl apply -f postgres.yaml
+
+minikube service postgres --url -n pg-kub2
+
+"c:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -p 59382 -U myuser -W myapp
+
+postgres\app>minikube docker-env
+
+postgres\app>docker build -t pg_kub2_postgres:v1 .
+
+kubectl apply -f secrets.yaml -f app-config.yaml -f deployment.yaml -f service.yaml
+
+minikube service pg-service --url -n pg-kub2
+
+http://127.0.0.1:59529/db
+Почему ошибка?
+
+CREATE TABLE client(id serial, name text);
+INSERT INTO client(name) values('Ivan');
+
+============ Helm
+
+Почистим 
+postgres>kubectl delete -f deployment.yaml -f service.yaml -f secrets.yaml -f app-config.yaml
+
+Смотрим папку helm\app-deploy-prod  и  файлы в ней - везде суффикс prod
+
+helm\charts>helm create example-chart
+
+helm\charts>helm install app-prod app --dry-run
+
+helm install app-prod app
+helm install app-dev app
+смотрим дащбоард
+
+helm list
+helm uninstall app-dev
+
+helm\charts>helm install app-dev app --values values-dev.yaml
+
+
+helm\charts>helm dependency update app-dep
+helm\charts>helm install app app-dep --dry-run
