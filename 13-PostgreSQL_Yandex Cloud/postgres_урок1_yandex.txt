@@ -1,0 +1,117 @@
+1. Ссылка на инструкцию по установке CLI
+	https://yandex.cloud/ru/docs/cli/quickstart
+	
+2. Выполняем команду по созданию кластера 
+
+yc managed-postgresql cluster create OtusClusterCLI \
+		--network-name default \
+		--postgresql-version 15 \
+		--resource-preset c3-c2-m4 \
+		--user name=OtusUser,password=OtusUser123! \
+		--database name=OtusDB,owner=OtusUser \
+		--host zone-id=ru-central1-b,assign-public-ip=true,subnet-name=default-ru-central1-b \
+		--host zone-id=ru-central1-d,assign-public-ip=true,subnet-name=default-ru-central1-d
+	
+   Не ждем окончания и идем дальше	
+3. в Compute Cloud созданем виртуальную машину
+	- ubuntu 24.04
+	- зона доступности ru-central1-b
+	- показать размер диска как влияет на bandwith
+	- shared-core 20% 2 vcpu 2gb ram
+	- группа безопасности default sg
+		- перейти в раздел virtual private cloud выбрать группу безопасности показать правила
+	- логин otususer
+	- ssh ключик otus
+	 	- перейти в identity hub, далее профиль, далее ssh ключи
+	- имя вм otusvm
+	
+4. Проваливаемся в созданную ВМ и смотрим
+	IP
+	все основные вкладки
+	копируем строку подключения
+	
+5. подключаемся к ВМ
+	вставляем строку подключения
+	sudo apt install postgresql
+	Правим строчки в файле /etc/postgresql/16/main/postgresql.conf 
+		listen_addresses = '*'		# what IP address(es) to listen on;
+		shared_buffers = 256MB			# min 128kB
+	Добавляем строчку в /etc/postgresql/16/main/pg_hba.conf дабы разрешить аутентификацию из других сетей 
+		host    all             all             0.0.0.0/0	        scram-sha-256
+	перезагружаем
+		sudo pg_ctlcluster 16 main restart
+	проверяем 
+		sudo su postgres
+		psql
+		show shared_buffers;
+		select * from pg_hba_file_rules;
+	создаем роль с паролем и возможность аутентификации 
+		create role otususer password 'OtusUser123!' login;
+
+6. подключаемся удаленно к базе данных postgres уже с локального ПК - конечно поменять IP
+	psql -U otususer -d postgres -h ip
+	
+7. запустить создание кластера из интерфейса
+	Имя OtusClusterUI
+	CPU optimized c3-c2-m4 
+	убрать увеличение размера дисков
+	user name=OtusUser,password=OtusUser123! 
+	база данных name=OtusDB
+	хосты поставить публичный IP
+		--host zone-id=ru-central1-b,assign-public-ip=true,subnet-name=default-ru-central1-b \
+		--host zone-id=ru-central1-d,assign-public-ip=true,subnet-name=default-ru-central1-d
+	окно обслуживание произвольное
+	включить доступ из datalens
+	
+	
+8. возвращаемя в кластер OtusClusterCLI
+	смотрим на вкладки
+	на вкладке базы данных создаем БД 
+		OtusSales
+		Ставим расширение postgis
+	на вкладке обзор в левом верхнем углу глядим подсказку подключиться
+		переключаемся на bash
+		копируем шаг 3
+		
+9. вставляем скопированное в локальную консоль
+	переключимся на базу данных OtusSales
+		\c OtusSales
+	проверим что расширение стоит
+		\dx
+	проверим shared buffers
+		show shared_buffers;
+
+10. переходим в консоль облака
+	редактируем кластер
+	внизу в параметрах выбираем настройки субд
+	ищем shared buffers и ставим в 536870912
+
+11. ждем изменений отвечаем на вопросы
+
+12. проверяем 
+	проверим shared buffers
+		show shared_buffers;
+		
+13. пробуем подключиться через особый FQDN
+	смотрим подсказку по подключению в консоли
+	переходим в документацию по bash и видим строчку 
+		FQDN вида c-<идентификатор_кластера>.rw.mdb.yandexcloud.net всегда 
+	копируем строку подключения снова
+	
+14. вставляем в консоль
+	вставляем скопированное в консоль но 
+	копируем идентификатор кластера и все что в хосте меняем на особый FQDN
+	
+	
+		
+		
+	
+	
+	
+
+	
+
+		
+		
+	
+	
