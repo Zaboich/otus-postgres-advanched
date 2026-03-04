@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+START_DATE=$(date)
 SSH_KEY=~/.ssh/id_rsa.pub
 NAMESPACE='otus'
 
@@ -140,3 +141,5 @@ for NUM in $(seq 1 1 $QUANTITY); do
 done
 
 echo "ADDR_VM[1]=\$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print \$2}') && ssh  -o StrictHostKeyChecking=no yc-user@\${ADDR_VM[1]}"
+
+echo "$START_DATE - " $(date)
