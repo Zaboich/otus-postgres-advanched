@@ -7,7 +7,7 @@ NAMESPACE='otus'
 QUANTITY=6
 
 QUANT_ETCD=$(($QUANTITY/2))
-QUANT_POSTGRES=$(($QUANTITY/2))
+FIRST_POSTGRES=$((QUANT_ETCD+1))
 
 read -p "Установить ETCD и Postgres? Y/N [N]: " IS_INSTALL
 
@@ -54,6 +54,7 @@ for NUM in $(seq 1 1 $QUANTITY); do
 done
 # Массив ip созданных VM
 export ADDR_VM
+
 # Устанавливаем программы
 # Установка ETCD на машины 1-3
 if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
@@ -75,6 +76,7 @@ if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
   done;
   echo "Ожидаение 15 c для согласования кластера ETCD"
   sleep 15;
+  echo "------------------------------------------------"
 
   # Проверка состояния кластера
   for NUM in $(seq 1 1 $QUANT_ETCD); do
@@ -83,7 +85,7 @@ if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
     ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'etcdctl endpoint status --cluster -w table';
   done;
 
-# На VM 4-6  Устанавливается Postgresql 18 и Patroni. Оба сервиса настраиваются и останавиливаются
+  # На VM 4-6  Устанавливается Postgresql 18 и Patroni. Оба сервиса настраиваются и останавиливаются
   for NUM in $(seq $(($QUANT_ETCD + 1)) 1 $QUANTITY); do
     VM_NAME="vm-${NAMESPACE}${NUM}"
     echo "${VM_NAME} Установка Posgresql";
@@ -99,17 +101,25 @@ if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
 
     ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_patroni.sh;
     echo "${VM_NAME} Установлен и подготовлен Patroni . Сервис patroni остановлен";
+    echo "------------------------------------------------";
   done;
 
-  # Стартуем кластер Patroni
-#  for NUM in $(seq $(($QUANT_ETCD + 1)) 1 $QUANTITY); do
-#    VM_NAME="vm-${NAMESPACE}${NUM}"
-#    echo "${VM_NAME} Запуск Patroni ";
-#    # Вызывается команда старта сервиса без ожидания результата, чтобы стартовать etcd на всех серверах кластера
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'sudo systemctl daemon-reload';
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'sudo systemctl enable patroni && sudo systemctl start patroni';
-#    echo "${VM_NAME} Запущен Patroni";
-#  done;
+  # Стартуем Leader Node для кластера Patroni
+  echo "${VM_NAME} Запуск Patroni как Leader node";
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./init_patroni_replica.sh;
+  sleep 10
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+  echo "${VM_NAME} Patroni Leader node запущен";
+  echo "------------------------------------------------";
+
+
+  for NUM in $(seq $(($FIRST_POSTGRES+1)) 1  $QUANTITY); do
+    VM_NAME="vm-${NAMESPACE}${NUM}"
+    echo "${VM_NAME} Запуск Patroni как Replica node";
+    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./init_patroni_replica.sh;
+    echo "${VM_NAME} Запущен Patroni";
+  done;
+
 
 fi
 
@@ -117,12 +127,13 @@ fi
 #  sleep 15;
 
   # Проверка состояния кластера
-#  for NUM in $(seq $(($QUANT_ETCD + 1)) 1 $QUANTITY); do
+  for NUM in $(seq $(($QUANT_ETCD + 1)) 1 $QUANTITY); do
+    VM_NAME="vm-${NAMESPACE}${NUM}"
 #    echo "${VM_NAME} Состояние сервиса Patroni";
 #    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
-#    echo "${VM_NAME} Список нод в кластере Patroni";
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
-#  done;
+    echo "${VM_NAME} Список нод в кластере Patroni";
+    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+  done;
 
 for NUM in $(seq 1 1 $QUANTITY); do
   echo "VM vm-${NAMESPACE}${NUM} : ${ADDR_VM[$NUM]}"

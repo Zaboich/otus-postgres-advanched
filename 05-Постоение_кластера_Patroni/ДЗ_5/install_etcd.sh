@@ -14,7 +14,7 @@ export LC_IDENTIFICATION="ru_RU.UTF-8"
 export LC_NUMERIC="ru_RU.UTF-8"
 export LC_PAPER="ru_RU.UTF-8"
 
-sudo apt install -y --quiet etcd-server etcd-client mc
+sudo apt install -y --quiet etcd-server etcd-client
 
 # Параметры конфигурации можно задавать через env или файл /etc/default/etcd
 

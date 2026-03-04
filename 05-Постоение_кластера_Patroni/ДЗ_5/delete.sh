@@ -1,9 +1,19 @@
 #!/bin/bash
 #set -e
+PIDS=()
+
 for VM_NAME in $(yc compute instance list --format=json | jq -r '.[].name'); do
-  yc compute instance delete $VM_NAME
+  echo "Удаление ${VM_NAME}"
+  ( yc compute instance delete $VM_NAME && echo "${VM_NAME} удалена" ||  echo "FAIL ${VM_NAME} удаление не удалось" ) &
+  PIDS+=($!);
 done
-#yc compute instance list --format json | jq -r '.[].id' | xargs -I {} echo {} && yc compute instance delete {}
+
+# Ждем завершения всех фоновых процессов удаления
+for PID in "${PIDS[@]}"; do
+  wait $PID;
+done
+
+  #yc compute instance list --format json | jq -r '.[].id' | xargs -I {} echo {} && yc compute instance delete {}
 
 for DNS_NAME in $(yc dns zone list --format=json | jq -r '.[].name' | grep otus | sort -r); do yc dns zone delete $DNS_NAME; done
 
