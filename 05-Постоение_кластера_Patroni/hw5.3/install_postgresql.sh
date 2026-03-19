@@ -16,8 +16,9 @@ export LC_PAPER="ru_RU.UTF-8"
 
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-sudo apt update
-sudo apt install -y --quiet postgresql
+sudo apt update  > /dev/null 2>&1
+sudo apt install -y --quiet postgresql > /dev/null 2>&1
+echo "Установлен Postgres 18"
 
 # Установка пароля пользователя postgres
 export PGPASSWORD=postgres

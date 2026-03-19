@@ -5,10 +5,13 @@ SSH_KEY=~/.ssh/id_rsa.pub
 NAMESPACE='otus'
 
 # 3 VM для кластера Patroni+Postgres 3 VM для кластера etcd
-QUANTITY=6
+QUANTITY=7
 
-QUANT_ETCD=$(($QUANTITY/2))
-FIRST_POSTGRES=$((QUANT_ETCD+1))
+QUANT_ETCD=3 #$(($QUANTITY/2))
+FIRST_POSTGRES=4 #$((QUANT_ETCD+1))
+LAST_POSTGRES=6
+FIRST_HAPROXY=7 #$((FIRST_POSTGRES+QUANT_ETCD))
+LAST_HAPROXY=7
 
 read -p "Установить ETCD и Postgres? Y/N [N]: " IS_INSTALL
 
@@ -73,151 +76,164 @@ echo "------------------------------------------------"
 
 
 # Устанавливаем программы
-if [[ "$IS_INSTALL" == "Y" || "$IS_INSTALL" == "y" ]]; then
 
-  # Установка ETCD на машины 1-3
-  echo "Установка ETCD на VM 1-3";
-  PIDS=()
-  for NUM in $(seq 1 1 $QUANT_ETCD); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-    echo "${VM_NAME} Установка ETCD ";
-    # Параллельный запуск установки ETCD на VM-otus 1-3
-    ( ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_etcd.sh &&  echo "${VM_NAME} Установлен и подготовлен ETCD. Сервис etcd остановлен"; ) &
-    PIDS+=($!);
-  done;
+# Установка ETCD на машины 1-3
+echo "Установка ETCD на VM 1-3";
+PIDS=()
+for NUM in $(seq 1 1 $QUANT_ETCD); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} Установка ETCD ";
+  # Параллельный запуск установки ETCD на VM-otus 1-3
+  ( ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_etcd.sh &&  echo "${VM_NAME} Установлен и подготовлен ETCD. Сервис etcd остановлен"; ) &
+  PIDS+=($!);
+done;
 
-  # Ждем завершения всех фоновых процессов
-  for PID in "${PIDS[@]}"; do
+# Ждем завершения всех фоновых процессов
+for PID in "${PIDS[@]}"; do
+  wait $PID;
+done
+
+wait
+sleep 5
+
+echo "$START_DATE - " $(date)
+echo "Установлены ETCD"
+echo "------------------------------------------------"
+
+for NUM in $(seq 1 1 $QUANT_ETCD); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} Запуск ETCD ";
+  # Вызывается команда старта сервиса без ожидания результата, чтобы стартовать etcd на всех серверах кластера
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'nohup sudo systemctl start etcd  > /dev/null 2>&1 &';
+  echo "${VM_NAME} Запущен ETCD";
+done;
+echo "Ожидаение c для согласования кластера ETCD"
+sleep 5;
+echo "------------------------------------------------"
+
+# Проверка состояния кластера
+for NUM in $(seq 1 1 $QUANT_ETCD); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} Состояние ETCD";
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'etcdctl endpoint status --cluster -w table';
+done;
+
+wait
+
+echo "$START_DATE - $(date)"
+echo "Запущен кластер ETCD"
+echo "------------------------------------------------"
+
+# На VM 4-6  Устанавливается Postgresql 18 и Patroni. Оба сервиса настраиваются и останавиливаются
+echo "Установка Postgresql на 3 VM";
+PIDS=()
+for NUM in $(seq $(($FIRST_POSTGRES)) 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  # параллельный запроск установки
+  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh && echo "${VM_NAME} Установлен и подготовлен Postgres" ) &
+  PIDS+=($!);
+done;
+
+# Ждем завершения всех фоновых процессов
+for PID in "${PIDS[@]}"; do
     wait $PID;
-  done
+done
 
-  wait
-  sleep 5
+wait
 
-  echo "$START_DATE - " $(date)
-  echo "Установлены ETCD"
-  echo "------------------------------------------------"
+echo "Установка Patroni на 3 VM";
+PIDS=()
+for NUM in $(seq $(($FIRST_POSTGRES)) 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
 
-  for NUM in $(seq 1 1 $QUANT_ETCD); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-    echo "${VM_NAME} Запуск ETCD ";
-    # Вызывается команда старта сервиса без ожидания результата, чтобы стартовать etcd на всех серверах кластера
-    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'nohup sudo systemctl start etcd  > /dev/null 2>&1 &';
-    echo "${VM_NAME} Запущен ETCD";
-  done;
-  echo "Ожидаение c для согласования кластера ETCD"
-  sleep 5;
-  echo "------------------------------------------------"
+  echo "${VM_NAME} загрузка шаблона файла конфигурации Patroni";
+  scp ./patroni.yml yc-user@${ADDR_VM[$NUM]}:/tmp/patroni.yml
 
-  # Проверка состояния кластера
-  for NUM in $(seq 1 1 $QUANT_ETCD); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-    echo "${VM_NAME} Состояние ETCD";
-    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'etcdctl endpoint status --cluster -w table';
-  done;
+  echo "${VM_NAME} загрузка файла сервиса Patroni";
+  scp ./patroni.service yc-user@${ADDR_VM[$NUM]}:/tmp/patroni.service && ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'sudo mv /tmp/patroni.service /etc/systemd/system/patroni.service';
+  echo "${VM_NAME} Загружен файл службы patroni.service";
 
-  wait
+  # параллельный запроск установки
+  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_patroni.sh && echo "${VM_NAME} Установлен и подготовлен Patroni. Сервис patroni остановлен") &
+  PIDS+=($!);
 
-  echo "$START_DATE - " $(date)
-  echo "Запущен кластер ETCD"
-  echo "------------------------------------------------"
+done;
 
-  # На VM 4-6  Устанавливается Postgresql 18 и Patroni. Оба сервиса настраиваются и останавиливаются
-  echo "Установка Postgresql на 3 VM";
-  PIDS=()
-  for NUM in $(seq $(($FIRST_POSTGRES)) 1 $QUANTITY); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-    # параллельный запроск установки
-    (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh && echo "${VM_NAME} Установлен и подготовлен Postgres" ) &
-    PIDS+=($!);
-  done;
-
-  # Ждем завершения всех фоновых процессов
-  for PID in "${PIDS[@]}"; do
+# Ждем завершения всех фоновых процессов
+for PID in "${PIDS[@]}"; do
       wait $PID;
-  done
+    done
+PIDS=()
 
-  wait
+# Стартуем Leader Node для кластера Patroni vm 4
+echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Запуск Patroni как Leader node";
+# Каталог данных очищается, класстер инициализирует пустую БД
+ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./init_patroni_leader.sh;
+sleep 10
+ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Patroni Leader node запущен";
+echo "------------------------------------------------";
 
-  echo "Установка Patroni на 3 VM";
-  PIDS=()
-  for NUM in $(seq $(($FIRST_POSTGRES)) 1 $QUANTITY); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
+# Стартуем Patroni на всех репликах vm 5-6
+for NUM in $(seq $(($FIRST_POSTGRES+1)) 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} Запуск Patroni как Replica node";
+  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./init_patroni_replica.sh && echo "${VM_NAME} Запущен Patroni") &
+  PIDS+=($!);
+done;
 
-    echo "${VM_NAME} загрузка шаблона файла конфигурации Patroni";
-    scp ./patroni.yml yc-user@${ADDR_VM[$NUM]}:/tmp/patroni.yml
+for PID in "${PIDS[@]}"; do
+  wait $PID;
+done
+PIDS=()
 
-    echo "${VM_NAME} загрузка файла сервиса Patroni";
-    scp ./patroni.service yc-user@${ADDR_VM[$NUM]}:/tmp/patroni.service && ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'sudo mv /tmp/patroni.service /etc/systemd/system/patroni.service';
-    echo "${VM_NAME} Загружен файл службы patroni.service";
 
-    # параллельный запроск установки
-    (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_patroni.sh && echo "${VM_NAME} Установлен и подготовлен Patroni. Сервис patroni остановлен") &
-    PIDS+=($!);
-
-  done;
-
-  # Ждем завершения всех фоновых процессов
-  for PID in "${PIDS[@]}"; do
-        wait $PID;
-      done
-  PIDS=()
-
-  # Стартуем Leader Node для кластера Patroni vm 4
-  echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Запуск Patroni как Leader node";
-  # Каталог данных очищается, класстер инициализирует пустую БД
-  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./init_patroni_leader.sh;
-  sleep 10
+# Проверка состояния кластера
+for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+#    echo "${VM_NAME} Состояние сервиса Patroni";
+#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
+  echo "${VM_NAME} Список нод в кластере Patroni";
   ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
-  echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Patroni Leader node запущен";
-  echo "------------------------------------------------";
+done;
 
-  # Стартуем Patroni на всех репликах vm 5-6
-  for NUM in $(seq $(($FIRST_POSTGRES+1)) 1  $QUANTITY); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-    echo "${VM_NAME} Запуск Patroni как Replica node";
-    (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./init_patroni_replica.sh && echo "${VM_NAME} Запущен Patroni") &
-    PIDS+=($!);
-  done;
+echo "$START_DATE - " $(date)
+echo "Запущен кластер Patroni"
+echo "------------------------------------------------"
 
-  for PID in "${PIDS[@]}"; do
-        wait $PID;
-      done
-  PIDS=()
+# В Leader cоздаём БД Demo и заполняем данными
+echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Заполняем Leader данными";
+(ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./leader_upload_data.sh && echo "БД на Leader заполнена") &
+PIDS+=($!);
+sleep 10
 
-fi
+echo "$START_DATE - " $(date)
+echo "Запущена загрузка данных в Leader"
+echo "------------------------------------------------"
+echo "Проверяем состояние кластера"
 
-  # Проверка состояния кластера
-  for NUM in $(seq $FIRST_POSTGRES 1 $QUANTITY); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
+# Проверка состояния кластера
+for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
 #    echo "${VM_NAME} Состояние сервиса Patroni";
 #    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
-    echo "${VM_NAME} Список нод в кластере Patroni";
-    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
-  done;
+  echo "${VM_NAME} Список нод в кластере Patroni";
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+done;
 
-  echo "$START_DATE - " $(date)
-  echo "Запущен кластер Patroni"
-  echo "------------------------------------------------"
+# Установка балансировщика Haproxy
+for NUM in $(seq ${FIRST_HAPROXY} 1 ${LAST_HAPROXY}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  scp ./haproxy.cfg yc-user@${ADDR_VM[$NUM]}:/tmp/haproxy.cfg
+  echo "${VM_NAME} Установка Haproxy";
+  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_haproxy.sh && echo "${VM_NAME} Haproxy запущен") &
+  PIDS+=($!);
+done;
 
-  # В Leader cоздаём БД Demo и заполняем данными
-  echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Заполняем Leader данными";
-  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./leader_upload_data.sh && echo "БД на Leader заполнена") &
-  sleep 10
-
-  echo "$START_DATE - " $(date)
-  echo "Запущена загрузка данных в Leader"
-  echo "------------------------------------------------"
-  echo "Проверяем состояние класстера"
-
-  # Проверка состояния кластера
-  for NUM in $(seq $FIRST_POSTGRES 1 $QUANTITY); do
-    VM_NAME="vm-${NAMESPACE}${NUM}"
-#    echo "${VM_NAME} Состояние сервиса Patroni";
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
-    echo "${VM_NAME} Список нод в кластере Patroni";
-    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
-  done;
+for PID in "${PIDS[@]}"; do
+  wait $PID;
+done
+PIDS=()
 
 
 for NUM in $(seq 1 1 $QUANTITY); do

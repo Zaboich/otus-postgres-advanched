@@ -15,7 +15,7 @@ IP_ADDR5=$(getent hosts vm-otus5 | awk '{ print $1 }')
 IP_ADDR6=$(getent hosts vm-otus6 | awk '{ print $1 }')
 
 echo "Установка python"
-sudo apt install -y -qq python3-venv python-is-python3
+sudo apt install -y -qq python3-venv python-is-python3 > /dev/null 2>&1
 
 echo "Подготовка каталогов"
 sudo mkdir -p -m 755 /opt/patroni
