@@ -5,15 +5,14 @@ SSH_KEY=~/.ssh/id_rsa.pub
 NAMESPACE='otus'
 
 # 3 VM для кластера Patroni+Postgres 3 VM для кластера etcd
-QUANTITY=7
+QUANTITY=8
 
 QUANT_ETCD=3 #$(($QUANTITY/2))
 FIRST_POSTGRES=4 #$((QUANT_ETCD+1))
 LAST_POSTGRES=6
 FIRST_HAPROXY=7 #$((FIRST_POSTGRES+QUANT_ETCD))
 LAST_HAPROXY=7
-
-read -p "Установить ETCD и Postgres? Y/N [N]: " IS_INSTALL
+TEST_VM=8
 
 NET="net-${NAMESPACE}"
 SUBNET="subnet-${NAMESPACE}"
@@ -69,7 +68,7 @@ done
 # Массив ip созданных VM
 export ADDR_VM
 sleep 30
-echo "$START_DATE - " $(date)
+echo "$START_DATE - $(date)"
 echo "Созданы все VM"
 echo "------------------------------------------------"
 
@@ -96,7 +95,7 @@ done
 wait
 sleep 5
 
-echo "$START_DATE - " $(date)
+echo "$START_DATE - $(date)"
 echo "Установлены ETCD"
 echo "------------------------------------------------"
 
@@ -108,7 +107,7 @@ for NUM in $(seq 1 1 $QUANT_ETCD); do
   echo "${VM_NAME} Запущен ETCD";
 done;
 echo "Ожидаение c для согласования кластера ETCD"
-sleep 5;
+sleep 10;
 echo "------------------------------------------------"
 
 # Проверка состояния кластера
@@ -133,6 +132,9 @@ for NUM in $(seq $(($FIRST_POSTGRES)) 1 ${LAST_POSTGRES}); do
   (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh && echo "${VM_NAME} Установлен и подготовлен Postgres" ) &
   PIDS+=($!);
 done;
+
+echo "Установка client psql на дополнительной VM"
+(ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./install_psql-client.sh && echo "vm-${NAMESPACE}${TEST_VM} Установлен client psql" ) &
 
 # Ждем завершения всех фоновых процессов
 for PID in "${PIDS[@]}"; do
@@ -165,11 +167,14 @@ for PID in "${PIDS[@]}"; do
     done
 PIDS=()
 
+
 # Стартуем Leader Node для кластера Patroni vm 4
 echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Запуск Patroni как Leader node";
 # Каталог данных очищается, класстер инициализирует пустую БД
 ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./init_patroni_leader.sh;
+
 sleep 10
+
 ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
 echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Patroni Leader node запущен";
 echo "------------------------------------------------";
@@ -187,53 +192,60 @@ for PID in "${PIDS[@]}"; do
 done
 PIDS=()
 
-
 # Проверка состояния кластера
 for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
   VM_NAME="vm-${NAMESPACE}${NUM}"
-#    echo "${VM_NAME} Состояние сервиса Patroni";
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
   echo "${VM_NAME} Список нод в кластере Patroni";
   ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
 done;
 
-echo "$START_DATE - " $(date)
+echo "$START_DATE - $(date)"
 echo "Запущен кластер Patroni"
 echo "------------------------------------------------"
-
-# В Leader cоздаём БД Demo и заполняем данными
-echo ""vm-${NAMESPACE}${FIRST_POSTGRES}" Заполняем Leader данными";
-(ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'bash -s ' < ./leader_upload_data.sh && echo "БД на Leader заполнена") &
-PIDS+=($!);
-sleep 10
-
-echo "$START_DATE - " $(date)
-echo "Запущена загрузка данных в Leader"
-echo "------------------------------------------------"
-echo "Проверяем состояние кластера"
-
-# Проверка состояния кластера
-for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
-  VM_NAME="vm-${NAMESPACE}${NUM}"
-#    echo "${VM_NAME} Состояние сервиса Patroni";
-#    ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'systemctl status patroni';
-  echo "${VM_NAME} Список нод в кластере Patroni";
-  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
-done;
 
 # Установка балансировщика Haproxy
 for NUM in $(seq ${FIRST_HAPROXY} 1 ${LAST_HAPROXY}); do
   VM_NAME="vm-${NAMESPACE}${NUM}"
   scp ./haproxy.cfg yc-user@${ADDR_VM[$NUM]}:/tmp/haproxy.cfg
-  echo "${VM_NAME} Установка Haproxy";
-  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_haproxy.sh && echo "${VM_NAME} Haproxy запущен") &
-  PIDS+=($!);
+  echo "${VM_NAME} Установка балансировщика Haproxy";
+  (ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_haproxy.sh && echo "${VM_NAME} Haproxy запущен")
 done;
 
-for PID in "${PIDS[@]}"; do
-  wait $PID;
-done
-PIDS=()
+echo "------------------------------------------------"
+
+
+# В Leader cоздаём БД Demo и заполняем данными
+echo "С тестовой vm-${NAMESPACE}${TEST_VM} загружаем дамп, подключение к БД производися через сервер Haproxy";
+(ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./upload_data.sh && echo "Дамп БД загружен")
+sleep 5
+echo "$START_DATE - $(date)"
+
+
+echo "Проверка состояния кластера после загрузки дампа"
+for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} кластер:";
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+done;
+
+echo "Этап проверки доступности БД с тестовой VM"
+echo "Запрашиваются данные из таблицы БД, через внешний IP Haproxy"
+# Haproxy проксирует запрос Лидеру кластера (primary node)
+ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$TEST_VM]} 'psql -h ${ADDR_VM[$FIRST_HAPROXY]} -U postgres -d demo -w -c "SELECT * FROM airplanes_data;"'
+
+echo "Принудительная остановка Patroni Leader "
+# Программно не проверяется, но предполагатся, что лидером кластера является первый сервер Patroni|Postgres
+ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$FIRST_POSTGRES]} 'psql -h ${ADDR_VM[$FIRST_HAPROXY]} -U postgres -d demo -w -c "SELECT * FROM airplanes_data;"'
+echo "Проверка состояния кластера после остановки лидера"
+for NUM in $(seq ${FIRST_POSTGRES} 1 ${LAST_POSTGRES}); do
+  VM_NAME="vm-${NAMESPACE}${NUM}"
+  echo "${VM_NAME} кластер:";
+  ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$NUM]} '/opt/patroni/bin/patronictl -c /etc/patroni/patroni.yml list';
+done;
+
+echo "Повторно запрашиваются данные из таблицы БД, через внешний IP Haproxy"
+# Haproxy проксирует запрос новому Лидеру кластера (primary node). Возможна ситуация, что кластер не успеет перестроится или Haproxy не опредит нового лидера
+ssh -o StrictHostKeyChecking=no yc-user@${ADDR_VM[$TEST_VM]} 'psql -h ${ADDR_VM[$FIRST_HAPROXY]} -U postgres -d demo -w -c "SELECT * FROM airplanes_data;"'
 
 
 for NUM in $(seq 1 1 $QUANTITY); do
@@ -242,4 +254,4 @@ done
 
 echo "ADDR_VM[1]=\$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print \$2}') && ssh  -o StrictHostKeyChecking=no yc-user@\${ADDR_VM[1]}"
 
-echo "$START_DATE - " $(date)
+echo "$START_DATE - $(date)"

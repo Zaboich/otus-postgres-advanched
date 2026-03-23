@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
-export LC_ALL="C.UTF-8,"
+export LC_ALL="C.UTF-8"
 export LANGUAGE="ru_RU.UTF-8"
 export LANG="ru_RU.UTF-8"
 export LC_TIME="ru_RU.UTF-8"
@@ -36,3 +36,4 @@ echo "Создан .pgpass"
 sudo sed -i "/^#listen_addresses/s/.*/listen_addresses = '*'/" /etc/postgresql/18/main/postgresql.conf
 # Разрешение на подключение replication для пользователя replicator из подсети 192.168.0.0/24
 echo "host    replication     replicator             0.0.0.0/0          scram-sha-256" | sudo tee -a /etc/postgresql/18/main/pg_hba.conf
+echo "host    all     postgres             192.168.0.0/24          scram-sha-256" | sudo tee -a /etc/postgresql/18/main/pg_hba.conf

@@ -14,6 +14,11 @@ export LC_IDENTIFICATION="ru_RU.UTF-8"
 export LC_NUMERIC="ru_RU.UTF-8"
 export LC_PAPER="ru_RU.UTF-8"
 
+if dpkg -l | grep -q '^ii.*etcd-server' && dpkg -l | grep -q '^ii.*etcd-client'; then
+    echo "Пакеты etcd-server и etcd-client уже установлены"
+    exit 0
+fi
+
 sudo apt install -y --quiet etcd-server etcd-client > /dev/null 2>&1
 
 # Параметры конфигурации можно задавать через env или файл /etc/default/etcd
