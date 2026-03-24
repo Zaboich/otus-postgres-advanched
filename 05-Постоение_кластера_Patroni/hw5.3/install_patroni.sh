@@ -27,10 +27,10 @@ echo "Создание venv"
 python -m venv /opt/patroni
 source /opt/patroni/bin/activate
 
-pip install --upgrade pip
+pip install --upgrade pip > /dev/null
 
-pip install 'patroni[etcd3]'
-pip install 'psycopg2-binary'
+pip install 'patroni[etcd3]' > /dev/null
+pip install 'psycopg2-binary' > /dev/null
 
 sudo chown -R postgres:postgres /opt/patroni
 
@@ -40,7 +40,7 @@ if [ ! -f /tmp/patroni.yml ]; then
 fi
 
 sudo mv /tmp/patroni.yml /etc/patroni/patroni.yml
-echo "Обработка шаблона /etc/patroni/patroni.yml";
+echo "Обработка шаблона конфигурации /etc/patroni/patroni.yml";
 
 # Установка полей в файле шаблона
 sudo sed -i "s/{HOSTNAME}/${HOSTNAME}/g" /etc/patroni/patroni.yml

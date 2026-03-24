@@ -1,18 +1,6 @@
 #!/bin/bash
 set -e
 export DEBIAN_FRONTEND=noninteractive
-export LC_ALL="ru_RU.UTF-8,"
-export LANGUAGE="ru_RU.UTF-8"
-export LANG="ru_RU.UTF-8"
-export LC_TIME="ru_RU.UTF-8"
-export LC_MONETARY="ru_RU.UTF-8"
-export LC_ADDRESS="ru_RU.UTF-8"
-export LC_TELEPHONE="ru_RU.UTF-8"
-export LC_NAME="ru_RU.UTF-8"
-export LC_MEASUREMENT="ru_RU.UTF-8"
-export LC_IDENTIFICATION="ru_RU.UTF-8"
-export LC_NUMERIC="ru_RU.UTF-8"
-export LC_PAPER="ru_RU.UTF-8"
 
 if dpkg -l | grep -q '^ii.*etcd-server' && dpkg -l | grep -q '^ii.*etcd-client'; then
     echo "Пакеты etcd-server и etcd-client уже установлены"
@@ -35,6 +23,7 @@ IP_ADDR3=$(getent hosts vm-otus3 | awk '{ print $1 }')
 sudo systemctl stop etcd
 
 # В Yandex cloud hostname resolves to 127.0.1.1!
+echo "Конфигурация etcd ${HOSTNAME}:"
 echo "ETCD_NAME='etcd_otus${NUM}'
 ETCD_LISTEN_PEER_URLS='http://${IP_ADDR}:2380'
 ETCD_LISTEN_CLIENT_URLS='http://${IP_ADDR}:2379,http://127.0.0.1:2379,http://127.0.1.1:2379'

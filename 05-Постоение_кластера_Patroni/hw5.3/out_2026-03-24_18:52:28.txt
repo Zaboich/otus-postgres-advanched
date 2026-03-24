@@ -1,0 +1,589 @@
+Создание инфраструктуры в Yandex Cloud
+Создаётся network net-otus
+id: enpqlvf8rv5dhn87q6gi
+folder_id: b1gn21a8tiqshuhi9cs4
+created_at: "2026-03-24T15:52:29Z"
+name: net-otus
+default_security_group_id: enphp731s4im9v248thl
+
+Создан network net-otus
+Создаётся subnet subnet-otus
+Создана subnet subnet-otus
+Создаётся DNS ZONE dns-otus
+id: dnsda0t4579hq82hce5e
+folder_id: b1gn21a8tiqshuhi9cs4
+created_at: "2026-03-24T15:52:35.124Z"
+name: dns-otus
+zone: staging.
+private_visibility: {}
+
+Создана dns dns-otus
+Создаются 8 VM
+Создана vm-otus5
+Создана vm-otus8
+Создана vm-otus1
+Создана vm-otus7
+Создана vm-otus4
+Создана vm-otus2
+Создана vm-otus3
+Создана vm-otus6
+vm-otus1 : 158.160.212.78
+vm-otus2 : 158.160.230.99
+vm-otus3 : 158.160.239.201
+vm-otus4 : 158.160.244.10
+vm-otus5 : 158.160.236.216
+vm-otus6 : 158.160.228.212
+vm-otus7 : 158.160.243.85
+vm-otus8 : 158.160.230.218
+Созданы все VM. Ожидание 30 сек
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 18:53:58 MSK
+------------------------------------------------
+Инфраструктура подготовлена
+Устанавливаем программы
+Установка ETCD на VM 1-3
+vm-otus1 / 158.160.212.78 Установка ETCD 
+vm-otus2 / 158.160.230.99 Установка ETCD 
+vm-otus3 / 158.160.239.201 Установка ETCD 
+Конфигурация etcd vm-otus3:
+ETCD_NAME='etcd_otus3'
+ETCD_LISTEN_PEER_URLS='http://192.168.0.30:2380'
+ETCD_LISTEN_CLIENT_URLS='http://192.168.0.30:2379,http://127.0.0.1:2379,http://127.0.1.1:2379'
+
+ETCD_INITIAL_CLUSTER='etcd_otus1=http://vm-otus1:2380,etcd_otus2=http://vm-otus2:2380,etcd_otus3=http://vm-otus3:2380,'
+ETCD_INITIAL_CLUSTER_STATE='new'
+ETCD_INITIAL_CLUSTER_TOKEN='etcd_otus_cluster'
+ETCD_INITIAL_ADVERTISE_PEER_URLS='http://vm-otus3:2380'
+ETCD_INITIAL_ELECTION_TICK_ADVANCE='false'
+
+ETCD_ADVERTISE_CLIENT_URLS='http://vm-otus3:2379'
+
+ETCD_DATA_DIR='/var/lib/etcd'
+ETCD_ELECTION_TIMEOUT='10000'
+ETCD_HEARTBEAT_INTERVAL='2000'
+ETCD_ENABLE_V2='true'
+
+vm-otus3 Установлен и подготовлен ETCD. Сервис etcd остановлен
+Конфигурация etcd vm-otus2:
+ETCD_NAME='etcd_otus2'
+ETCD_LISTEN_PEER_URLS='http://192.168.0.33:2380'
+ETCD_LISTEN_CLIENT_URLS='http://192.168.0.33:2379,http://127.0.0.1:2379,http://127.0.1.1:2379'
+
+ETCD_INITIAL_CLUSTER='etcd_otus1=http://vm-otus1:2380,etcd_otus2=http://vm-otus2:2380,etcd_otus3=http://vm-otus3:2380,'
+ETCD_INITIAL_CLUSTER_STATE='new'
+ETCD_INITIAL_CLUSTER_TOKEN='etcd_otus_cluster'
+ETCD_INITIAL_ADVERTISE_PEER_URLS='http://vm-otus2:2380'
+ETCD_INITIAL_ELECTION_TICK_ADVANCE='false'
+
+ETCD_ADVERTISE_CLIENT_URLS='http://vm-otus2:2379'
+
+ETCD_DATA_DIR='/var/lib/etcd'
+ETCD_ELECTION_TIMEOUT='10000'
+ETCD_HEARTBEAT_INTERVAL='2000'
+ETCD_ENABLE_V2='true'
+
+vm-otus2 Установлен и подготовлен ETCD. Сервис etcd остановлен
+Конфигурация etcd vm-otus1:
+ETCD_NAME='etcd_otus1'
+ETCD_LISTEN_PEER_URLS='http://192.168.0.23:2380'
+ETCD_LISTEN_CLIENT_URLS='http://192.168.0.23:2379,http://127.0.0.1:2379,http://127.0.1.1:2379'
+
+ETCD_INITIAL_CLUSTER='etcd_otus1=http://vm-otus1:2380,etcd_otus2=http://vm-otus2:2380,etcd_otus3=http://vm-otus3:2380,'
+ETCD_INITIAL_CLUSTER_STATE='new'
+ETCD_INITIAL_CLUSTER_TOKEN='etcd_otus_cluster'
+ETCD_INITIAL_ADVERTISE_PEER_URLS='http://vm-otus1:2380'
+ETCD_INITIAL_ELECTION_TICK_ADVANCE='false'
+
+ETCD_ADVERTISE_CLIENT_URLS='http://vm-otus1:2379'
+
+ETCD_DATA_DIR='/var/lib/etcd'
+ETCD_ELECTION_TIMEOUT='10000'
+ETCD_HEARTBEAT_INTERVAL='2000'
+ETCD_ENABLE_V2='true'
+
+vm-otus1 Установлен и подготовлен ETCD. Сервис etcd остановлен
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 18:54:20 MSK
+Подготовлены ноды ETCD
+------------------------------------------------
+Запуск ETCD на всех нодах
+vm-otus1 / 158.160.212.78 Запущен ETCD
+vm-otus2 / 158.160.230.99 Запущен ETCD
+vm-otus3 / 158.160.239.201 Запущен ETCD
+Ожидание 20c для согласования кластера ETCD
+------------------------------------------------
+vm-otus1 / 158.160.212.78 Состояние ETCD
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|       ENDPOINT       |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| http://vm-otus2:2379 | 1552dd35e68e3805 |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
+| http://vm-otus1:2379 | e220ec5799211014 |  3.4.30 |   20 kB |      true |      false |         2 |          8 |                  8 |        |
+| http://vm-otus3:2379 | ed3b31a897aa5e0f |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+vm-otus2 / 158.160.230.99 Состояние ETCD
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|       ENDPOINT       |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| http://vm-otus2:2379 | 1552dd35e68e3805 |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
+| http://vm-otus1:2379 | e220ec5799211014 |  3.4.30 |   20 kB |      true |      false |         2 |          8 |                  8 |        |
+| http://vm-otus3:2379 | ed3b31a897aa5e0f |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+vm-otus3 / 158.160.239.201 Состояние ETCD
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|       ENDPOINT       |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| http://vm-otus2:2379 | 1552dd35e68e3805 |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
+| http://vm-otus1:2379 | e220ec5799211014 |  3.4.30 |   20 kB |      true |      false |         2 |          8 |                  8 |        |
+| http://vm-otus3:2379 | ed3b31a897aa5e0f |  3.4.30 |   20 kB |     false |      false |         2 |          8 |                  8 |        |
++----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 18:54:42 MSK
+Запущен кластер ETCD
+------------------------------------------------
+Установка Postgresql на 3 VM
+Установка client psql на дополнительной VM vm-otus8 158.160.230.218
+OK
+OK
+OK
+OK
+Установлен client psql 18
+Создан .pgpass
+vm-otus8 Установлен client psql
+Установлен Postgres 18
+ALTER ROLE
+CREATE ROLE
+Создан .pgpass
+host    replication     replicator             0.0.0.0/0          scram-sha-256
+host    all     postgres             192.168.0.0/24          scram-sha-256
+vm-otus4 / 158.160.244.10 Установлен и подготовлен Postgres
+Установлен Postgres 18
+ALTER ROLE
+CREATE ROLE
+Создан .pgpass
+host    replication     replicator             0.0.0.0/0          scram-sha-256
+host    all     postgres             192.168.0.0/24          scram-sha-256
+vm-otus5 / 158.160.236.216 Установлен и подготовлен Postgres
+Установлен Postgres 18
+ALTER ROLE
+CREATE ROLE
+Создан .pgpass
+host    replication     replicator             0.0.0.0/0          scram-sha-256
+host    all     postgres             192.168.0.0/24          scram-sha-256
+vm-otus6 / 158.160.228.212 Установлен и подготовлен Postgres
+Установлен Postgresql
+------------------------------------------------
+Установка Patroni на 3 VM
+vm-otus4 загрузка шаблона файла конфигурации Patroni
+vm-otus4 загрузка файла сервиса Patroni
+vm-otus4 Загружен файл службы patroni.service
+vm-otus5 загрузка шаблона файла конфигурации Patroni
+Установка python
+vm-otus5 загрузка файла сервиса Patroni
+vm-otus5 Загружен файл службы patroni.service
+vm-otus6 загрузка шаблона файла конфигурации Patroni
+Установка python
+vm-otus6 загрузка файла сервиса Patroni
+vm-otus6 Загружен файл службы patroni.service
+Установка python
+Подготовка каталогов
+Создание venv
+Подготовка каталогов
+Создание venv
+Подготовка каталогов
+Создание venv
+Обработка шаблона конфигурации /etc/patroni/patroni.yml
+Patroni установлен и сконфигурирован. Сервис patroni не запущен
+vm-otus4 Установлен и подготовлен Patroni. Сервис patroni остановлен
+Обработка шаблона конфигурации /etc/patroni/patroni.yml
+Patroni установлен и сконфигурирован. Сервис patroni не запущен
+vm-otus5 Установлен и подготовлен Patroni. Сервис patroni остановлен
+Обработка шаблона конфигурации /etc/patroni/patroni.yml
+Patroni установлен и сконфигурирован. Сервис patroni не запущен
+vm-otus6 Установлен и подготовлен Patroni. Сервис patroni остановлен
+Установлен Patroni
+------------------------------------------------
+vm-otus4 Запуск Patroni как Leader node
+Остановка сервиса postgres
+Проверка конфигурации Patroni
+Очистка data dir postgres
+Запуск сервиса Patroni
+Ожидание 10 сек
+Статус сервиса Patroni
+● patroni.service - Patroni high-availability PostgreSQL
+     Loaded: loaded (/etc/systemd/system/patroni.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2026-03-24 15:56:00 UTC; 10s ago
+   Main PID: 4827 (patroni)
+      Tasks: 15 (limit: 4653)
+     Memory: 95.0M (peak: 103.2M)
+        CPU: 1.500s
+     CGroup: /system.slice/patroni.service
+             ├─4827 /opt/patroni/bin/python /opt/patroni/bin/patroni /etc/patroni/patroni.yml
+             ├─4851 /usr/lib/postgresql/18/bin/postgres -D /var/lib/postgresql/18/main --config-file=/etc/postgresql/18/main/postgresql.conf --listen_addresses=0.0.0.0,127.0.0.1 --port=5432 --cluster_name=otus_cluster --wal_level=replica --hot_standby=on --max_connections=100 --max_wal_senders=10 --max_prepared_transactions=0 --max_locks_per_transaction=64 --track_commit_timestamp=off --max_replication_slots=10 --max_worker_processes=8 --wal_log_hints=on
+             ├─4853 "postgres: otus_cluster: io worker 0"
+             ├─4854 "postgres: otus_cluster: io worker 1"
+             ├─4855 "postgres: otus_cluster: io worker 2"
+             ├─4856 "postgres: otus_cluster: checkpointer "
+             ├─4857 "postgres: otus_cluster: background writer "
+             ├─4859 "postgres: otus_cluster: walwriter "
+             ├─4860 "postgres: otus_cluster: autovacuum launcher "
+             ├─4861 "postgres: otus_cluster: logical replication launcher "
+             └─4866 "postgres: otus_cluster: postgres postgres 127.0.0.1(50054) idle"
+
+Mar 24 15:56:02 vm-otus4 patroni[4851]: 2026-03-24 15:56:02.792 UTC [4851] WARNING:  could not create listen socket for "127.0.0.1"
+Mar 24 15:56:02 vm-otus4 patroni[4851]: 2026-03-24 15:56:02.792 UTC [4851] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+Mar 24 15:56:02 vm-otus4 patroni[4858]: 2026-03-24 15:56:02.810 UTC [4858] LOG:  database system was shut down at 2026-03-24 15:56:01 UTC
+Mar 24 15:56:02 vm-otus4 patroni[4851]: 2026-03-24 15:56:02.824 UTC [4851] LOG:  database system is ready to accept connections
+Mar 24 15:56:03 vm-otus4 patroni[4862]: localhost:5432 - accepting connections
+Mar 24 15:56:03 vm-otus4 patroni[4864]: localhost:5432 - accepting connections
+Mar 24 15:56:03 vm-otus4 patroni[4827]: 2026-03-24 15:56:03,814 INFO: establishing a new patroni heartbeat connection to postgres
+Mar 24 15:56:03 vm-otus4 patroni[4827]: 2026-03-24 15:56:03,842 INFO: running post_bootstrap
+Mar 24 15:56:03 vm-otus4 patroni[4827]: 2026-03-24 15:56:03,918 ERROR: User creation is not be supported starting from v4.0.0. Please use "bootstrap.post_bootstrap" script to create users.
+Mar 24 15:56:03 vm-otus4 patroni[4827]: 2026-03-24 15:56:03,939 INFO: initialized a new cluster
+Список Patroni nodes
++ Cluster: otus_cluster (7620851503528469226) ----+-------------+-----+------------+-----+
+| Member   | Host         | Role   | State   | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+--------+---------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader | running |  1 |             |     |            |     |
++----------+--------------+--------+---------+----+-------------+-----+------------+-----+
+Ожидание 10 сек на инициализацию кластера Patroni
++ Cluster: otus_cluster (7620851503528469226) ----+-------------+-----+------------+-----+
+| Member   | Host         | Role   | State   | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+--------+---------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader | running |  1 |             |     |            |     |
++----------+--------------+--------+---------+----+-------------+-----+------------+-----+
+vm-otus4 Patroni Leader node запущен
+------------------------------------------------
+Стартуем Patroni на всех репликах vm 5, 6
+vm-otus5 Запуск Patroni как Replica node
+vm-otus6 Запуск Patroni как Replica node
+Остановка сервиса postgres
+Остановка сервиса postgres
+Проверка конфигурации Patroni
+Очистка data dir postgres
+Запуск сервиса Patroni
+Проверка конфигурации Patroni
+Очистка data dir postgres
+Запуск сервиса Patroni
+Ожидание 10 сек
+Ожидание 10 сек
+Статус сервиса Patroni
+● patroni.service - Patroni high-availability PostgreSQL
+     Loaded: loaded (/etc/systemd/system/patroni.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2026-03-24 15:56:24 UTC; 10s ago
+   Main PID: 4965 (patroni)
+      Tasks: 15 (limit: 4653)
+     Memory: 144.0M (peak: 144.2M)
+        CPU: 1.327s
+     CGroup: /system.slice/patroni.service
+             ├─4965 /opt/patroni/bin/python /opt/patroni/bin/patroni /etc/patroni/patroni.yml
+             ├─4978 /usr/lib/postgresql/18/bin/postgres -D /var/lib/postgresql/18/main --config-file=/etc/postgresql/18/main/postgresql.conf --listen_addresses=0.0.0.0,127.0.0.1 --port=5432 --cluster_name=otus_cluster --wal_level=replica --hot_standby=on --max_connections=100 --max_wal_senders=10 --max_prepared_transactions=0 --max_locks_per_transaction=64 --track_commit_timestamp=off --max_replication_slots=10 --max_worker_processes=8 --wal_log_hints=on
+             ├─4980 "postgres: otus_cluster: io worker 0"
+             ├─4981 "postgres: otus_cluster: io worker 1"
+             ├─4982 "postgres: otus_cluster: io worker 2"
+             ├─4983 "postgres: otus_cluster: checkpointer "
+             ├─4984 "postgres: otus_cluster: background writer "
+             ├─4985 "postgres: otus_cluster: startup recovering 000000010000000000000005"
+             ├─4994 "postgres: otus_cluster: postgres postgres 127.0.0.1(44286) idle"
+             └─4997 "postgres: otus_cluster: walreceiver streaming 0/5000060"
+
+Mar 24 15:56:29 vm-otus6 patroni[4978]: 2026-03-24 15:56:29.214 UTC [4978] LOG:  database system is ready to accept read-only connections
+Mar 24 15:56:29 vm-otus6 patroni[4989]: 2026-03-24 15:56:29.238 UTC [4989] FATAL:  could not start WAL streaming: ERROR:  replication slot "vm_otus6" does not exist
+Mar 24 15:56:29 vm-otus6 patroni[4990]: 2026-03-24 15:56:29.261 UTC [4990] FATAL:  could not start WAL streaming: ERROR:  replication slot "vm_otus6" does not exist
+Mar 24 15:56:29 vm-otus6 patroni[4985]: 2026-03-24 15:56:29.262 UTC [4985] LOG:  waiting for WAL to become available at 0/5000018
+Mar 24 15:56:30 vm-otus6 patroni[4991]: localhost:5432 - accepting connections
+Mar 24 15:56:30 vm-otus6 patroni[4965]: 2026-03-24 15:56:30,229 INFO: Lock owner: vm-otus4; I am vm-otus6
+Mar 24 15:56:30 vm-otus6 patroni[4965]: 2026-03-24 15:56:30,229 INFO: establishing a new patroni heartbeat connection to postgres
+Mar 24 15:56:30 vm-otus6 patroni[4965]: 2026-03-24 15:56:30,377 INFO: no action. I am (vm-otus6), a secondary, and following a leader (vm-otus4)
+Mar 24 15:56:33 vm-otus6 patroni[4965]: 2026-03-24 15:56:33,951 INFO: no action. I am (vm-otus6), a secondary, and following a leader (vm-otus4)
+Mar 24 15:56:34 vm-otus6 patroni[4997]: 2026-03-24 15:56:34.263 UTC [4997] LOG:  started streaming WAL from primary at 0/5000000 on timeline 1
+Статус сервиса Patroni
+● patroni.service - Patroni high-availability PostgreSQL
+     Loaded: loaded (/etc/systemd/system/patroni.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2026-03-24 15:56:25 UTC; 10s ago
+   Main PID: 4849 (patroni)
+      Tasks: 14 (limit: 4653)
+     Memory: 93.7M (peak: 96.0M)
+        CPU: 1.206s
+     CGroup: /system.slice/patroni.service
+             ├─4849 /opt/patroni/bin/python /opt/patroni/bin/patroni /etc/patroni/patroni.yml
+             ├─4862 /usr/lib/postgresql/18/bin/postgres -D /var/lib/postgresql/18/main --config-file=/etc/postgresql/18/main/postgresql.conf --listen_addresses=0.0.0.0,127.0.0.1 --port=5432 --cluster_name=otus_cluster --wal_level=replica --hot_standby=on --max_connections=100 --max_wal_senders=10 --max_prepared_transactions=0 --max_locks_per_transaction=64 --track_commit_timestamp=off --max_replication_slots=10 --max_worker_processes=8 --wal_log_hints=on
+             ├─4864 "postgres: otus_cluster: io worker 0"
+             ├─4865 "postgres: otus_cluster: io worker 1"
+             ├─4866 "postgres: otus_cluster: io worker 2"
+             ├─4867 "postgres: otus_cluster: checkpointer "
+             ├─4868 "postgres: otus_cluster: background writer "
+             ├─4869 "postgres: otus_cluster: startup waiting for 000000010000000000000004"
+             └─4877 "postgres: otus_cluster: postgres postgres 127.0.0.1(50374) idle"
+
+Mar 24 15:56:28 vm-otus5 patroni[4871]: 2026-03-24 15:56:28.954 UTC [4871] FATAL:  could not start WAL streaming: ERROR:  replication slot "vm_otus5" does not exist
+Mar 24 15:56:28 vm-otus5 patroni[4869]: 2026-03-24 15:56:28.954 UTC [4869] LOG:  waiting for WAL to become available at 0/4000018
+Mar 24 15:56:29 vm-otus5 patroni[4872]: localhost:5432 - accepting connections
+Mar 24 15:56:29 vm-otus5 patroni[4874]: localhost:5432 - accepting connections
+Mar 24 15:56:29 vm-otus5 patroni[4849]: 2026-03-24 15:56:29,618 INFO: Lock owner: vm-otus4; I am vm-otus5
+Mar 24 15:56:29 vm-otus5 patroni[4849]: 2026-03-24 15:56:29,618 INFO: establishing a new patroni heartbeat connection to postgres
+Mar 24 15:56:29 vm-otus5 patroni[4849]: 2026-03-24 15:56:29,733 INFO: no action. I am (vm-otus5), a secondary, and following a leader (vm-otus4)
+Mar 24 15:56:33 vm-otus5 patroni[4849]: 2026-03-24 15:56:33,947 INFO: no action. I am (vm-otus5), a secondary, and following a leader (vm-otus4)
+Mar 24 15:56:33 vm-otus5 patroni[4880]: 2026-03-24 15:56:33.960 UTC [4880] FATAL:  could not start WAL streaming: ERROR:  replication slot "vm_otus5" does not exist
+Mar 24 15:56:33 vm-otus5 patroni[4869]: 2026-03-24 15:56:33.961 UTC [4869] LOG:  waiting for WAL to become available at 0/4000018
+Список Patroni nodes
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 Запущен Patroni
+Список Patroni nodes
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 Запущен Patroni
+Запущен Patroni на всех машинах кластера
+------------------------------------------------
+Проверка состояния кластера
+vm-otus4 Список нод в кластере Patroni
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 Список нод в кластере Patroni
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 Список нод в кластере Patroni
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   0/5000060 |   0 |  0/5000060 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 18:56:48 MSK
+Запущен кластер Patroni
+------------------------------------------------
+Подготовка балансировщика Haproxy
+Внешний адрес сервера Haproxy 158.160.243.85
+vm-otus7 Установка Haproxy
+Установка Haproxy
+Подготовка конфигурации
+Обработка шаблона /etc/haproxy/haproxy.cfg
+Проверка конфигурации
+Configuration file is valid
+Haproxy запущен на 192.168.0.6:5432 и 192.168.0.6:5433
+vm-otus7 Haproxy запущен
+------------------------------------------------
+В Leader cоздаём БД Demo и заполняем данными
+С тестовой vm-otus8 загружаем дамп, подключение к БД производися через сервер Haproxy
+Дамп БД загружен
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 19:02:08 MSK
+Проверка состояния кластера после загрузки дампа
+vm-otus4 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   1/958E1B0 |   0 |  1/958E1B0 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   1/958E1B0 |   0 |  1/958E1B0 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   1/958E1B0 |   0 |  1/958E1B0 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   1/958E1B0 |   0 |  1/958E1B0 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  1 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  1 |   1/958E1E8 |   0 |  1/958E1E8 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  1 |   1/958E1E8 |   0 |  1/958E1E8 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+------------------------------------------------
+Этап проверки доступности БД с тестовой VM
+Запрашиваются данные из таблицы БД, запрос выполнятся с тестовой vm-otus8 158.160.230.218 через внешний IP Haproxy. 
+SQL Запрос SELECT * FROM airplanes_data;
+ airplane_code |                               model                               | range | speed 
+---------------+-------------------------------------------------------------------+-------+-------
+ 32N           | {"en": "Aerobus A320neo", "ru": "Аэробус A320neo"}                |  6500 |   830
+ 339           | {"en": "Aerobus A330-900neo", "ru": "Аэробус A330-900neo"}        | 13300 |   870
+ 351           | {"en": "Aerobus A350-1000", "ru": "Аэробус A350-1000"}            | 16700 |   913
+ 35X           | {"en": "Aerobus A350F", "ru": "Аэробус A350F"}                    |  8700 |   903
+ 76F           | {"en": "Boeing 767-300F", "ru": "Боинг 767-300F"}                 |  6000 |   850
+ 77W           | {"en": "Boeing 777-300ER", "ru": "Боинг 777-300ER"}               | 14600 |   905
+ 789           | {"en": "Boeing 787-9 Dreamliner", "ru": "Боинг 787-9 Dreamliner"} | 14000 |   913
+ 7M7           | {"en": "Boeing 737 MAX 7", "ru": "Боинг 737 MAX 7"}               |  7000 |   840
+ CR7           | {"en": "Bombardier CRJ700", "ru": "Бомбардье CRJ700"}             |  3100 |   829
+ E70           | {"en": "Embraer E170", "ru": "Эмбраэр E170"}                      |  4000 |   800
+(10 rows)
+
+------------------------------------------------
+Определяем Patroni cluster Leader http запросом к vm-otus4  http://158.160.244.10:8008/patroni
+Patroni cluster Leader - vm-otus4 158.160.244.10
+Принудительная остановка Patroni Leader node
+Остановлен сервис Patroni на vm Leader 
+------------------------------------------------
+Ожидание 5 сек для перестроения кластера.
+------------------------------------------------
+Проверка состояния кластера после остановки лидера
+vm-otus4 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/958E708 |   0 |  1/958E708 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/958E708 |   0 |  1/958E708 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/958E708 |   0 |  1/958E708 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+------------------------------------------------
+Определяем Новый Patroni cluster Leader http запросом к работающей vm-otus6  http://158.160.228.212:8008/patroni
+Новый Patroni cluster Leader - vm-otus5 158.160.236.216
+------------------------------------------------
+Ожидание 30 сек для обновления данных о лидере кластера в Haproxy.
+Повторно запрашиваются данные из таблицы БД, через внешний IP Haproxy,
+ запрос выполнятся с тестовой vm-otus8 158.160.230.218 через внешний IP Haproxy. 
+SQL Запрос SELECT * FROM airplanes_data;
+ airplane_code |                               model                               | range | speed 
+---------------+-------------------------------------------------------------------+-------+-------
+ 32N           | {"en": "Aerobus A320neo", "ru": "Аэробус A320neo"}                |  6500 |   830
+ 339           | {"en": "Aerobus A330-900neo", "ru": "Аэробус A330-900neo"}        | 13300 |   870
+ 351           | {"en": "Aerobus A350-1000", "ru": "Аэробус A350-1000"}            | 16700 |   913
+ 35X           | {"en": "Aerobus A350F", "ru": "Аэробус A350F"}                    |  8700 |   903
+ 76F           | {"en": "Boeing 767-300F", "ru": "Боинг 767-300F"}                 |  6000 |   850
+ 77W           | {"en": "Boeing 777-300ER", "ru": "Боинг 777-300ER"}               | 14600 |   905
+ 789           | {"en": "Boeing 787-9 Dreamliner", "ru": "Боинг 787-9 Dreamliner"} | 14000 |   913
+ 7M7           | {"en": "Boeing 737 MAX 7", "ru": "Боинг 737 MAX 7"}               |  7000 |   840
+ CR7           | {"en": "Bombardier CRJ700", "ru": "Бомбардье CRJ700"}             |  3100 |   829
+ E70           | {"en": "Embraer E170", "ru": "Эмбраэр E170"}                      |  4000 |   800
+(10 rows)
+
+Запуск Patroni на vm-otus4 / 158.160.244.10
+Запущен сервис Patroni на vm-otus4 / 158.160.244.10
+------------------------------------------------
+Проверка состояния кластера после запуска vm-otus4
+vm-otus4 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/958E740 |   0 |  1/958E740 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/958E740 |   0 |  1/958E740 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | streaming |  2 |   1/95A5FC8 |   0 |  1/95A5FC8 |   0 |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/95A5FC8 |   0 |  1/95A5FC8 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+Switchover Переключение кластера на работу с первоначальным Leader
+Current cluster topology
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Replica | streaming |  2 |   1/95A5FC8 |   0 |  1/95A5FC8 |   0 |
+| vm-otus5 | 192.168.0.5  | Leader  | running   |  2 |             |     |            |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/95A5FC8 |   0 |  1/95A5FC8 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+2026-03-24 16:03:05.73305 Successfully switched over to "vm-otus4"
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  2 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | stopped   |    |     unknown |     |    unknown |     |
+| vm-otus6 | 192.168.0.13 | Replica | streaming |  2 |   1/95A5FC8 |   0 |  1/95A5FC8 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+------------------------------------------------
+Проверяем Patroni cluster Leader после switchover 
+ http запросом к vm-otus6  http://158.160.228.212:8008/patroni
+Новый Patroni cluster Leader - vm-otus5 158.160.236.216
+------------------------------------------------
+Проверка состояния кластера после switchover vm-otus4
+vm-otus4 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  3 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  3 |   1/95A6300 |   0 |  1/95A6300 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | running   |  2 |   1/95A6128 |   0 |  1/95A6128 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus5 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  3 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  3 |   1/95A6300 |   0 |  1/95A6300 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | running   |  2 |   1/95A6128 |   0 |  1/95A6128 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+vm-otus6 кластер:
++ Cluster: otus_cluster (7620851503528469226) --+----+-------------+-----+------------+-----+
+| Member   | Host         | Role    | State     | TL | Receive LSN | Lag | Replay LSN | Lag |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+| vm-otus4 | 192.168.0.21 | Leader  | running   |  3 |             |     |            |     |
+| vm-otus5 | 192.168.0.5  | Replica | streaming |  3 |   1/95A6300 |   0 |  1/95A6300 |   0 |
+| vm-otus6 | 192.168.0.13 | Replica | running   |  2 |   1/95A6128 |   0 |  1/95A6128 |   0 |
++----------+--------------+---------+-----------+----+-------------+-----+------------+-----+
+------------------------------------------------
+Ожидание 30 сек для обновления данных о лидере кластера в Haproxy после switchover
+После switchover запрашиваются данные из таблицы БД, через внешний IP Haproxy,
+ запрос выполнятся с тестовой vm-otus8 158.160.230.218 через внешний IP Haproxy. 
+SQL Запрос SELECT * FROM airplanes_data;
+ airplane_code |                               model                               | range | speed 
+---------------+-------------------------------------------------------------------+-------+-------
+ 32N           | {"en": "Aerobus A320neo", "ru": "Аэробус A320neo"}                |  6500 |   830
+ 339           | {"en": "Aerobus A330-900neo", "ru": "Аэробус A330-900neo"}        | 13300 |   870
+ 351           | {"en": "Aerobus A350-1000", "ru": "Аэробус A350-1000"}            | 16700 |   913
+ 35X           | {"en": "Aerobus A350F", "ru": "Аэробус A350F"}                    |  8700 |   903
+ 76F           | {"en": "Boeing 767-300F", "ru": "Боинг 767-300F"}                 |  6000 |   850
+ 77W           | {"en": "Boeing 777-300ER", "ru": "Боинг 777-300ER"}               | 14600 |   905
+ 789           | {"en": "Boeing 787-9 Dreamliner", "ru": "Боинг 787-9 Dreamliner"} | 14000 |   913
+ 7M7           | {"en": "Boeing 737 MAX 7", "ru": "Боинг 737 MAX 7"}               |  7000 |   840
+ CR7           | {"en": "Bombardier CRJ700", "ru": "Бомбардье CRJ700"}             |  3100 |   829
+ E70           | {"en": "Embraer E170", "ru": "Эмбраэр E170"}                      |  4000 |   800
+(10 rows)
+
+VM vm-otus1 : 158.160.212.78
+VM vm-otus2 : 158.160.230.99
+VM vm-otus3 : 158.160.239.201
+VM vm-otus4 : 158.160.244.10
+VM vm-otus5 : 158.160.236.216
+VM vm-otus6 : 158.160.228.212
+VM vm-otus7 : 158.160.243.85
+VM vm-otus8 : 158.160.230.218
+ADDR_VM[1]=$(yc compute instance show --name vm-otus1 | grep -E ' +address' | tail -n 1 | awk '{print $2}') && ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[1]}
+Вт 24 мар 2026 18:52:28 MSK - Вт 24 мар 2026 19:03:45 MSK

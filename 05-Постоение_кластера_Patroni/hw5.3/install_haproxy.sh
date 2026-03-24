@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+export DEBIAN_FRONTEND=noninteractive
 # общая часть имён хостов
 HOSTNAME=$(hostname)
 NUM=${HOSTNAME: -1}
