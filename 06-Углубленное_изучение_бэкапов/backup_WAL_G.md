@@ -5,48 +5,56 @@ https://cloud.yandex.ru/docs/compute/quickstart/quick-create-linux
 
 
 
-# Создаем сетевую инфраструктуру и саму VM:
+## Создаем сетевую инфраструктуру и саму VM:
 yc vpc network create --name otus-net --description "otus-net" && \
 yc vpc subnet create --name otus-subnet --range 192.168.0.0/24 --network-name otus-net --description "otus-subnet" && \
 yc compute instance create --name otus-vm2 --hostname otus-vm2 --cores 2 --memory 4 --create-boot-disk size=15G,type=network-hdd,image-folder-id=standard-images,image-family=ubuntu-2404-lts --network-interface subnet-name=otus-subnet,nat-ip-version=ipv4 --ssh-key ~/yc_key.pub 
 
-# Подключимся к VM:
+Подключимся к VM:
 vm_ip_address=$(yc compute instance show --name otus-vm2 | grep -E ' +address' | tail -n 1 | awk '{print $2}') && ssh -o StrictHostKeyChecking=no -i ~/yc_key yc-user@$vm_ip_address 
 
-# Установим PostgreSQL:
-sudo apt update && sudo apt upgrade -y -q && sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - && sudo apt-get update && sudo apt -y install postgresql && sudo apt -y install mc
-
+Установим PostgreSQL:
+```
+sudo apt update && sudo apt upgrade -y -q && sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - && \
+sudo apt-get update && sudo apt -y install postgresql && sudo apt -y install mc
+```
+```
 pg_lsclusters
-
+```
 
 https://habr.com/ru/articles/494338/
 https://habr.com/ru/articles/486188/
 https://habr.com/ru/articles/506610/
 https://github.com/wal-g/wal-g
 
-
-# Скачать бинарник WAL-G
+## Установка WAL-G
+Скачать бинарник WAL-G
 https://github.com/wal-g/wal-g/releases
+```
+wget https://github.com/wal-g/wal-g/releases/download/v3.0.7/wal-g-pg-ubuntu-24.04-amd64.tar.gz && \
+tar -zxvf wal-g-pg-ubuntu-24.04-amd64.tar.gz && sudo mv wal-g-pg-ubuntu-24.04-amd64.tar.gz /usr/local/bin/wal-g
 
-wget https://github.com/wal-g/wal-g/releases/download/v3.0.7/wal-g-pg-ubuntu-24.04-amd64.tar.gz && tar -zxvf wal-g-pg-ubuntu-24.04-amd64.tar.gz && sudo mv wal-g-pg-ubuntu-24.04-amd64.tar.gz /usr/local/bin/wal-g
+curl -L "https://github.com/wal-g/wal-g/releases/download/v3.0.8/wal-g-pg-ubuntu-24.04-amd64" -o "wal-g"
+```
 
-curl -L "https://github.com/wal-g/wal-g/releases/download/v3.0.7/wal-g-pg-ubuntu-24.04-amd64" -o "wal-g"
-
-# Перенести файл
+Перенести файл
+```
 sudo mv wal-g /usr/local/bin/
 
 sudo ls -l /usr/local/bin/wal-g
 
 sudo chmod ugo+x /usr/local/bin/wal-g
 sudo wal-g --version
-
-# Создаем каталог для хранения резервных копий и сделаем владельцем пользователя postgres
+```
+Создаем каталог для хранения резервных копий и сделаем владельцем пользователя postgres
+```
 sudo mkdir /home/backups && sudo chown -R postgres:postgres /home/backups/
-
+```
 # Создать настроечный файл для wal-g под текущим пользователем = в /var/lib/postgresql/.walg.json
 sudo su postgres
 nano ~/.walg.json
-
+( Ubuntu - /var/lib/postgresql/.walg.json )
 # Заполняем настройками
 {
     "WALG_FILE_PREFIX": "/home/backups",
@@ -54,7 +62,7 @@ nano ~/.walg.json
     "WALG_DELTA_MAX_STEPS": "5",
     "WALG_UPLOAD_DISK_CONCURRENCY": "4",
     "PGDATA": "/var/lib/postgresql/18/main",
-    "PGHOST": "localhost"
+    "PGHOST": "/var/run/postgresql/.s.PGSQL.5432"
 }
 
 // - указывается папка назначения

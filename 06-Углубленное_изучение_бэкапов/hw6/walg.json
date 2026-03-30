@@ -1,0 +1,8 @@
+{
+  "WALG_FILE_PREFIX": "/mnt/backup",
+  "WALG_COMPRESSION_METHOD": "brotli",
+  "WALG_DELTA_MAX_STEPS": "5",
+  "WALG_UPLOAD_DISK_CONCURRENCY": "4",
+  "PGDATA": "/var/lib/postgresql/18/main",
+  "PGHOST": "/var/run/postgresql"
+}
