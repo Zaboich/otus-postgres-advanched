@@ -7,4 +7,4 @@ export LC_ALL="C.UTF-8"
 
 curl https://edu.postgrespro.ru/demo-20250901-3m.sql.gz -o demo-20250901-3m.sql.gz
 
-gunzip -c demo-20250901-3m.sql.gz | psql -h 127.0.0.1 -U postgres -w
+gunzip -c demo-20250901-3m.sql.gz | sudo -u postgres psql

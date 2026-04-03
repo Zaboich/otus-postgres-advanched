@@ -28,4 +28,5 @@ sudo sed -i "/^#listen_addresses/s/.*/listen_addresses = '*'/" /etc/postgresql/1
 
 # Разрешение на подключение replication для пользователя replicator из подсети 192.168.0.0/24
 echo "host    replication     replicator             0.0.0.0/0          scram-sha-256" | sudo tee -a /etc/postgresql/18/main/pg_hba.conf
+echo "host    all     postgres             127.0.0.0/24          scram-sha-256" | sudo tee -a /etc/postgresql/18/main/pg_hba.conf
 echo "host    all     postgres             192.168.0.0/24          scram-sha-256" | sudo tee -a /etc/postgresql/18/main/pg_hba.conf

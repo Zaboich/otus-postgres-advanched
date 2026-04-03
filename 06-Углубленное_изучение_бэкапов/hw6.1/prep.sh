@@ -90,7 +90,7 @@ sleep 30
 #echo "Для теста устанавливается режим --auto-delete. В работе диск с резервными копиями не должен удаляться при удалении VM"
 #for NUM in $(seq ${FIRST_PATRONI} 1 ${LAST_PATRONI}); do
 #  VM_NAME="${VMN}${NUM}"
-#  ( yc compute instance attach-disk vm-otus${NUM} --disk-name disk-${NUM} --mode rw --auto-delete && echo "disk-${NUM} attached to ${VMN}${NUM}" ) &
+#  ( yc compute instance attach-disk ${VMN}${NUM} --disk-name disk-${NUM} --mode rw --auto-delete && echo "disk-${NUM} attached to ${VMN}${NUM}" ) &
 #  PIDS+=($!);
 #done
 #
@@ -132,30 +132,32 @@ done
 echo "Установлен Postgresql"
 echo "------------------------------------------------"
 
-echo "Установка и настройка WAL-G на реплику Postgres  vm-otus${BACKUP_WALG}"
+echo "Установка и настройка WAL-G на ${VMN}${BACKUP_WALG}"
 echo "Монтирование диска для резервных копий"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./mount_disk_backup.sh && echo "vm-otus${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Монтирован диск для хранения резервных копий"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./mount_disk_backup.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Монтирован диск для хранения резервных копий"
 
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./walg.json yc-user@${ADDR_VM[BACKUP_WALG]}:/tmp/walg.json && echo "${VMN}${BACKUP_WALG} загружен файл шаблона конфигурации WAL-G";
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_walg.sh && echo "vm-otus${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_walg.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
+echo "WAL-G подготовлен на ${VMN}${BACKUP_WALG}"
+echo "------------------------------------------------"
 
+
+echo "${VMN}${BACKUP_WALG} Создание первой резевной копии WAL-G"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < ./create_backup_walg.sh
+echo "------------------------------------------------"
 
 echo "Cоздаём БД Demo и заполняем данными"
-(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "bash -s " < ./upload_data.sh > /dev/null && echo "Дамп БД загружен")
+(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < ./upload_data.sh > /dev/null && echo "Дамп БД загружен")
 sleep 5
 
-echo -e "Запрашиваются данные из таблицы БД, запрос выполнятся с тестовой ${VMN}${TEST_VM} ${ADDR_VM[$TEST_VM]} через внешний IP Haproxy. \nSQL Запрос SELECT * FROM airplanes_data;"
+echo -e "Запрашиваются данные из таблицы БД, запрос выполнятся с тестовой ${VMN}${BACKUP_WALG} ${ADDR_VM[$BACKUP_WALG]}. \nSQL Запрос SELECT * FROM airplanes_data;"
 # Haproxy проксирует запрос Лидеру кластера (primary node)
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "psql -h ${ADDR_VM[$FIRST_HAPROXY]} -U postgres -d demo -w -c 'SELECT * FROM airplanes_data;'"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 echo "$START_DATE - $(date)"
 echo "Закончена подготовка БД."
 echo "------------------------------------------------"
 
-echo "vm-otus${BACKUP_WALG} Создание первой резевной копии WAL-G"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres /usr/local/bin/wal-g backup-push /var/lib/postgresql/18/main" && echo echo "vm-otus${BACKUP_WALG} резевноая копиия WAL-G подготовлена"
-
-echo "vm-otus${BACKUP_WALG} Проверка списка резевных копии WAL-G"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres /usr/local/bin/wal-g backup-list"
-
+echo "${VMN}${BACKUP_WALG} Создание второй резевной копии WAL-G"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < ./create_backup_walg.sh
 
 echo "$START_DATE - $(date)"
