@@ -182,11 +182,12 @@ echo "------------------------------------------------"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main stop" && echo "${VMN}${BACKUP_WALG} остановлен кластер Postgres main"
 
 echo "Копирование каталога backup на тестовый сервер, для развёртывания резервной копии"
-./ssh_copy_file.sh ${ADDR_VM[$BACKUP_WALG]} ${ADDR_VM[TEST_VM]}
+./ssh_copy_file.sh ${ADDR_VM[$BACKUP_WALG]} ${ADDR_VM[TEST_VM]} "/mnt/backup"
 
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./walg_restore_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Развёрнута резерная копия"
-sleep 10
-
+sleep 5
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "sudo pg_ctlcluster 18 main start" && echo "${VMN}${BACKUP_WALG} стартовал кластер Postgres main"
+sleep 5
 echo -e "${VMN}${TEST_VM} Запрашиваются данные из таблицы БД. \nSQL Запрос возвращает количество строк в таблице bookings SELECT count(*) FROM bookings;"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 

@@ -1,46 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
-export LANGUAGE="C.UTF-8"
-export LC_ALL="C.UTF-8"
-
 
 # ================= НАСТРОЙКИ =================
-# Замените на актуальные значения
-SERVER1=$1
-SERVER2=$2
-SSH_USER=yc-user
-KEY_NAME="id_ed25519_auto"
-DIR_SOURCE="/mnt/backup"
-DIR_DEST=${DIR_SOURCE}
+# Укажите внешние IP или FQDN из Яндекс.Облака
+VM1="yc-user@$1"
+VM2="yc-user@$2"
+
+KEY_NAME="id_ed25519_yc_vm1_to_vm2"
+SRC_DIR=$3
+DST_DIR=$SRC_DIR
 # =============================================
+echo "Перенос каталога $SRC_DIR с VM1 $1 на VM2 $2"
+echo "Генерация SSH-ключа на VM1..."
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$VM1" \
+  "mkdir -p ~/.ssh && ssh-keygen -t ed25519 -f ~/.ssh/$KEY_NAME -N '' -C 'yc-vm1-to-vm2-auto'"
 
-echo "Копирование каталога ${DIR_SOURCE} с сервера ${SERVER1} на ${SERVER2}."
+echo "Добавление публичного ключа на VM2 $2"
+PUB_KEY=$(ssh "$VM1" "cat ~/.ssh/${KEY_NAME}.pub")
+echo "$PUB_KEY" | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$VM2" \
+  "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 
-echo "Генерация SSH-ключа на ${SERVER1} ... "
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${SSH_USER}@${SERVER1} "mkdir -p ~/.ssh && ssh-keygen -t ed25519 -f ~/.ssh/$KEY_NAME -N '' -C 'auto-script-key'"
-PUB_KEY=$(ssh ${SSH_USER}@${SERVER1} "cat ~/.ssh/${KEY_NAME}.pub")
+# Проверяем наличие rsync (в минимальных образах YC его может не быть)
+ssh "$VM1" "command -v rsync &>/dev/null || sudo apt-get update && sudo apt-get install -y rsync" 2>/dev/null
+ssh "$VM2" "command -v rsync &>/dev/null || sudo apt-get update && sudo apt-get install -y rsync" 2>/dev/null
 
-if [[ -z "$PUB_KEY" ]]; then
-  echo "Не удалось прочитать публичный ключ с Server1."
-  exit 1
-fi
-
-# Безопасное добавление ключа с правильными правами
-echo "$PUB_KEY" | ssh ${SSH_USER}@${SERVER2} "sudo -u postgres
-  mkdir -p ~/.ssh
-  cat >> ~/.ssh/authorized_keys
-  chmod 700 ~/.ssh
-  chmod 600 ~/.ssh/authorized_keys
-"
-
-echo "📦 [3/3] Копирование директории с Server1 на Server2..."
-# Используем rsync для надёжного копирования.
-# Если rsync не установлен на Server1, замените на: scp -i ~/.ssh/$KEY_NAME -o StrictHostKeyChecking=no -r $DIR_TO_COPY $SERVER2:$DIR_DEST/
-ssh ${SSH_USER}@${SERVER1} "sudo rsync -avz \
+echo "Копирование $SRC_DIR ..."
+# sudo rsync на VM1 позволяет читать директорию с правами 700 postgres:postgres
+# --rsync-path='sudo rsync' запускает rsync от root на VM2 для сохранения метаданных
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$VM1" "sudo rsync -avz \
+  --rsync-path='sudo rsync' \
   -e 'ssh -i /home/yc-user/.ssh/$KEY_NAME -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
-  $DIR_SOURCE postgres@${SERVER2}:$DIR_DEST"
+  $SRC_DIR/ \
+  $VM2:$DST_DIR/"
 
-echo "✅ Операция завершена успешно."
+# 4. Фиксируем права и владельца на VM2 (на случай, если rsync создал файлы от root)
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$VM2" "sudo chown -R postgres:postgres $DST_DIR && sudo chmod -R 700 $DST_DIR"
 
-# Опционально: удалить сгенерированный ключ с Server1 после копирования
-# ssh "$SERVER1" "rm -f ~/.ssh/$KEY_NAME ~/.ssh/${KEY_NAME}.pub"
+echo "На VM2 $2 директория $DST_DIR:"
+ssh "$VM2" "sudo ls -ld $DST_DIR && sudo ls -l $DST_DIR | head -5"
+
+# Опционально: удалить временный ключ
+# ssh "$VM1" "rm -f ~/.ssh/$KEY_NAME ~/.ssh/${KEY_NAME}.pub"
+# ssh "$VM2" "sed -i '/yc-vm1-to-vm2-auto/d' ~/.ssh/authorized_keys"
