@@ -33,3 +33,5 @@ echo "archive_timeout=60"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.
 echo "archive_command = '/usr/local/bin/wal-g wal-push %p'"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
 echo "restore_command = '/usr/local/bin/wal-g wal-fetch %f %p'"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
 
+sudo systemctl restart postgresql
+

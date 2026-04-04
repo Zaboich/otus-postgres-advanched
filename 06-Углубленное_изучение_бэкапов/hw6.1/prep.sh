@@ -2,24 +2,25 @@
 set -e
 START_DATE=$(date)
 SSH_KEY=~/.ssh/id_rsa.pub
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 # 3 VM для кластера Patroni+Postgres 3 VM для кластера etcd
-NAMESPACE='otus'
-QUANTITY=2
+export YC_CLI_INITIALIZATION_SILENCE=true
+export NAMESPACE='otus'
+export QUANTITY=2
 QUANT_ETCD=0
-FIRST_POSTGRES=1
-LAST_POSTGRES=2
+export FIRST_POSTGRES=1
+export LAST_POSTGRES=2
 FIRST_PATRONI=0
 LAST_PATRONI=0
-
 FIRST_HAPROXY=0
 LAST_HAPROXY=0
-TEST_VM=2
+export TEST_VM=2
 #системы резервного копирования <-> номера vm
 BACKUP_PGBASEBACKUP=0
-BACKUP_WALG=1
+export BACKUP_WALG=1
 BACKUP_PROBACKUP=0
 #vm для восстановления БД
-RESTORED_POSTGRES=2
+export RESTORED_POSTGRES=2
 # Имена ресурсов
 VMN="vm-${NAMESPACE}"
 NET="net-${NAMESPACE}"
@@ -118,12 +119,12 @@ PIDS=()
 for NUM in $(seq $(($FIRST_POSTGRES)) 1 ${LAST_POSTGRES}); do
   VM_NAME="${VMN}${NUM}"
   # параллельный запроск установки
-  (ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh && echo "${VM_NAME} / ${ADDR_VM[$NUM]} Установлен и подготовлен Postgres" ) &
+  (ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$NUM]} 'bash -s ' < ./install_postgresql.sh && echo "${VM_NAME} / ${ADDR_VM[$NUM]} Установлен и подготовлен Postgres" ) &
   PIDS+=($!);
 done;
 
 #echo "Установка client psql на дополнительной VM ${VMN}${TEST_VM} ${ADDR_VM[$TEST_VM]}"
-#(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./install_psql-client.sh && echo "${VMN}${TEST_VM} Установлен client psql" ) &
+#(ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./install_psql-client.sh && echo "${VMN}${TEST_VM} Установлен client psql" ) &
 
 # Ждем завершения всех фоновых процессов
 for PID in "${PIDS[@]}"; do
@@ -134,67 +135,96 @@ echo "------------------------------------------------"
 
 echo "${VMN}${BACKUP_WALG} Установка и настройка WAL-G"
 echo "Монтирование диска для резервных копий"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./mount_disk_backup.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Монтирован диск для хранения резервных копий"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./mount_disk_backup.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Монтирован диск для хранения резервных копий"
 
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./walg.json yc-user@${ADDR_VM[BACKUP_WALG]}:/tmp/walg.json && echo "${VMN}${BACKUP_WALG} загружен файл шаблона конфигурации WAL-G";
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_walg.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
+scp ${SSH_OPTIONS} ./walg.json yc-user@${ADDR_VM[BACKUP_WALG]}:/tmp/walg.json && echo "${VMN}${BACKUP_WALG} загружен файл шаблона конфигурации WAL-G";
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_walg.sh && echo "${VMN}${BACKUP_WALG} / ${ADDR_VM[$BACKUP_WALG]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
 echo "WAL-G подготовлен на ${VMN}${BACKUP_WALG}"
 echo "------------------------------------------------"
 echo "${VMN}${TEST_VM} Установка и настройка WAL-G"
 echo "Монтирование диска для резервных копий"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./mount_disk_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Монтирован диск для хранения резервных копий"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./mount_disk_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Монтирован диск для хранения резервных копий"
 
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./walg.json yc-user@${ADDR_VM[TEST_VM]}:/tmp/walg.json && echo "${VMN}${TEST_VM} загружен файл шаблона конфигурации WAL-G";
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./install_walg.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
+scp ${SSH_OPTIONS} ./walg.json yc-user@${ADDR_VM[TEST_VM]}:/tmp/walg.json && echo "${VMN}${TEST_VM} загружен файл шаблона конфигурации WAL-G";
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./install_walg.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Установлен и подготовлен WAL-G и конфигурации бекапирования Postgres"
 echo "WAL-G подготовлен на ${VMN}${TEST_VM}"
 echo "------------------------------------------------"
 
 echo "${VMN}${BACKUP_WALG} Создание клиентского приложения, которое будет создавать нагрузку на БД"
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./app2.py yc-user@${ADDR_VM[BACKUP_WALG]}:/tmp/app2.py && echo "${VMN}${BACKUP_WALG} загружен файл приложения";
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_python.sh && echo "${VMN}${BACKUP_WALG} Установлен и подготовлен venv Python для запуска приложения"
+scp ${SSH_OPTIONS} ./app2.py yc-user@${ADDR_VM[BACKUP_WALG]}:/tmp/app2.py && echo "${VMN}${BACKUP_WALG} загружен файл приложения";
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} 'bash -s ' < ./install_python.sh && echo "${VMN}${BACKUP_WALG} Установлен и подготовлен venv Python для запуска приложения"
 echo "------------------------------------------------"
 
 
 echo "${VMN}${BACKUP_WALG} Создание первой резевной копии WAL-G"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < walg_create_backup.sh
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < walg_create_backup.sh
 echo "------------------------------------------------"
 
 echo "Cоздаём БД Demo и заполняем данными"
-(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < ./upload_data.sh > /dev/null && echo "Дамп БД загружен")
+(ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < ./upload_data.sh > /dev/null && echo "Дамп БД загружен")
 sleep 5
 
 echo -e "${VMN}${BACKUP_WALG} Запрашиваются данные из таблицы БД. \nSQL Запрос возвращает количество строк в таблице bookings SELECT count(*) FROM bookings;"
-# Haproxy проксирует запрос Лидеру кластера (primary node)
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 echo "$START_DATE - $(date)"
 echo "Закончена подготовка БД."
 echo "------------------------------------------------"
 
 echo "${VMN}${BACKUP_WALG} Создание второй резевной копии WAL-G"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < walg_create_backup.sh
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "bash -s " < walg_create_backup.sh
 
-echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждую секунду добавляет запись в таблицу booking"
-(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py;" > /dev/null && echo "${VMN}${BACKUP_WALG} Запущено приложение-клиент") &
-
-echo "${VMN}${BACKUP_WALG} Приложение работает ожидаем 30 сек и останавливаем сервис posgres"
 echo "------------------------------------------------"
 
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main stop" && echo "${VMN}${BACKUP_WALG} остановлен кластер Postgres main"
+echo "Переносим файлы резервной копии на VM ${VMN}${TEST_VM} и проверяем восстановление"
+echo "${VMN}${BACKUP_WALG} Копирование каталога backup на тестовый сервер, для развёртывания резервной копии"
+./ssh_copy_file.sh ${ADDR_VM[$BACKUP_WALG]} ${ADDR_VM[TEST_VM]} "/mnt/backup/" && echo "${VMN}${BACKUP_WALG} каталог backup скопирован на ${VMN}${TEST_VM}"
 
-echo "Копирование каталога backup на тестовый сервер, для развёртывания резервной копии"
-./ssh_copy_file.sh ${ADDR_VM[$BACKUP_WALG]} ${ADDR_VM[TEST_VM]} "/mnt/backup"
-
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./walg_restore_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Развёрнута резерная копия"
+echo "------------------------------------------------"
+echo "${VMN}${TEST_VM} Запускаем скрипт восстановления из резервной копиии: "
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./walg_restore_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Развёрнута резерная копия. Postgres стартовал"
 sleep 5
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "sudo pg_ctlcluster 18 main start" && echo "${VMN}${BACKUP_WALG} стартовал кластер Postgres main"
-sleep 5
+echo "------------------------------------------------"
 echo -e "${VMN}${TEST_VM} Запрашиваются данные из таблицы БД. \nSQL Запрос возвращает количество строк в таблице bookings SELECT count(*) FROM bookings;"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$TEST_VM]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main start" && echo "${VMN}${BACKUP_WALG} стартовал кластер Postgres main"
+echo "Сравниваем количество строк в таблице bookings на серверах ${VMN}${TEST_VM} и ${VMN}${BACKUP_WALG} (вручную)"
+
+#echo "------------------------------------------------"
+#ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main start" && echo "${VMN}${BACKUP_WALG} стартовал кластер Postgres main"
+#sleep 10
+echo "------------------------------------------------"
+
+echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждую секунду добавляет запись в таблицу booking"
+(ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py 300;" > /dev/null && echo "${VMN}${BACKUP_WALG} Приложение-клиент остановлено") &
+
+echo "${VMN}${BACKUP_WALG} Приложение продолжает работать. Ожидаем 30 сек и останавливаем сервис posgres, при этом приложение остановится после ошибки запроса SQL"
+sleep 30
+echo -e "${VMN}${BACKUP_WALG} Запрашиваются количество строк из таблицы bookings"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
+echo "------------------------------------------------"
+echo -e "${VMN}${BACKUP_WALG} Останавливается Postgres для имитации аварийной остановки"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main stop" && echo "${VMN}${BACKUP_WALG} остановлен кластер Postgres main"
+
+echo "------------------------------------------------"
+echo "${VMN}${BACKUP_WALG} Повторно копируем каталог backup на тестовый сервер ${VMN}${TEST_VM}"
+./ssh_copy_file.sh ${ADDR_VM[$BACKUP_WALG]} ${ADDR_VM[TEST_VM]} "/mnt/backup/" && echo "${VMN}${BACKUP_WALG} каталог backup скопирован на ${VMN}${TEST_VM}"
+
+echo "------------------------------------------------"
+
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} 'bash -s ' < ./walg_restore_backup.sh && echo "${VMN}${TEST_VM} / ${ADDR_VM[$TEST_VM]} Развёрнута резерная копия. Postgres стартовал"
+sleep 5
+echo "------------------------------------------------"
+echo -e "${VMN}${TEST_VM} Запрашиваются данные из таблицы БД. \nSQL Запрос возвращает количество строк в таблице bookings SELECT count(*) FROM bookings;"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
+
+echo "------------------------------------------------"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo pg_ctlcluster 18 main start" && echo "${VMN}${BACKUP_WALG} стартовал кластер Postgres main"
 sleep 10
-
+echo "------------------------------------------------"
 echo -e "${VMN}${BACKUP_WALG} Запрашиваются данные из таблицы БД. \nSQL Запрос возвращает количество строк в таблице bookings SELECT count(*) FROM bookings;"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
+ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 
+echo "Сравниваем количество строк в таблице bookings на серверах после второго теста ${VMN}${TEST_VM} и ${VMN}${BACKUP_WALG} (вручную)"
+
+echo "------------------------------------------------"
 echo "$START_DATE - $(date)"

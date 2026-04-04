@@ -17,7 +17,7 @@ sudo rm -rf /var/lib/postgresql/18/main/  && echo "${HOSTNAME} удалена д
 echo "${HOSTNAME} Список резервных копий WAL-G:"
 sudo -u postgres /usr/local/bin/wal-g backup-list
 
-echo "${HOSTNAME} Список резервных копий WAL-G:"
+echo "${HOSTNAME} WAL-G восстановление из резервной копии LATEST"
 sudo -u postgres  /usr/local/bin/wal-g backup-fetch /var/lib/postgresql/18/main LATEST && echo "${HOSTNAME} резевная копиия WAL-G восстановлена в директорию данных"
 
 if [ ! -f /var/lib/postgresql/18/main/recovery.signal ]; then
@@ -28,5 +28,6 @@ fi
 
 sudo chown -R postgres:postgres /var/lib/postgresql/
 
+echo "${HOSTNAME} Стартуем Postgres"
 
-sudo systemctl start postgresql && echo "${HOSTNAME} стартовал сервис Postgres"
+sudo pg_ctlcluster 18 main start && echo "${HOSTNAME} стартовал сервис Postgres"
