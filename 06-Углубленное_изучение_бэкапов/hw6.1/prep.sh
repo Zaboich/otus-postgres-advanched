@@ -70,7 +70,7 @@ echo "Создаются $QUANTITY VM"
 for NUM in $(seq 1 1 $QUANTITY); do
   VM_NAME="${VMN}${NUM}"
   if ! yc compute instance show --name ${VM_NAME} 2>/dev/null; then
-    ( yc compute instance create --name ${VM_NAME} --hostname ${VM_NAME} --cores 2 --memory 2 --preemptible=true \
+    ( export YC_CLI_INITIALIZATION_SILENCE=true && yc compute instance create --name ${VM_NAME} --hostname ${VM_NAME} --cores 2 --memory 4 \
     --create-boot-disk size=10G,type=network-hdd,image-folder-id=standard-images,image-family=ubuntu-2404-lts \
     --network-interface subnet-name=${SUBNET},nat-ip-version=ipv4 --ssh-key $SSH_KEY > /dev/null && echo "Создана ${VM_NAME}" ) &
     PIDS+=($!);
@@ -194,11 +194,11 @@ echo "Сравниваем количество строк в таблице boo
 #sleep 10
 echo "------------------------------------------------"
 
-echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждую секунду добавляет запись в таблицу booking"
+echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждые 0.3 секунду добавляет запись в таблицу booking"
 (ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py 3000;" > /dev/null && echo "${VMN}${BACKUP_WALG} Приложение-клиент остановлено") &
 
-echo "${VMN}${BACKUP_WALG} Приложение продолжает работать. Ожидаем 30 сек и останавливаем сервис posgres, при этом приложение остановится после ошибки запроса SQL"
-sleep 30
+echo "${VMN}${BACKUP_WALG} Приложение продолжает работать. Ожидаем 600 сек и останавливаем сервис posgres, при этом приложение остановится после ошибки запроса SQL"
+sleep 600
 echo -e "${VMN}${BACKUP_WALG} Запрашиваются количество строк из таблицы bookings"
 ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[BACKUP_WALG]} "sudo -u postgres psql -d demo -w -c 'SELECT count(*) FROM bookings;'"
 echo "------------------------------------------------"

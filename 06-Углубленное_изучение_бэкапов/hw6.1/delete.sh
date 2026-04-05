@@ -4,7 +4,7 @@ PIDS=()
 
 for VM_NAME in $(yc compute instance list --format=json | jq -r '.[].name'); do
   echo "Удаление ${VM_NAME}"
-  ( yc compute instance delete $VM_NAME && echo "${VM_NAME} удалена" ||  echo "FAIL ${VM_NAME} удаление не удалось" ) &
+  ( export YC_CLI_INITIALIZATION_SILENCE=true && yc compute instance delete $VM_NAME && echo "${VM_NAME} удалена" ||  echo "FAIL ${VM_NAME} удаление не удалось" ) &
   PIDS+=($!);
 done
 
