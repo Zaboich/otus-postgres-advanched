@@ -195,7 +195,7 @@ echo "Сравниваем количество строк в таблице boo
 echo "------------------------------------------------"
 
 echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждую секунду добавляет запись в таблицу booking"
-(ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py 300;" > /dev/null && echo "${VMN}${BACKUP_WALG} Приложение-клиент остановлено") &
+(ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py 3000;" > /dev/null && echo "${VMN}${BACKUP_WALG} Приложение-клиент остановлено") &
 
 echo "${VMN}${BACKUP_WALG} Приложение продолжает работать. Ожидаем 30 сек и останавливаем сервис posgres, при этом приложение остановится после ошибки запроса SQL"
 sleep 30
