@@ -27,10 +27,10 @@ fi
 #ssh ${SSH_OPTIONS} ${VM1} "command -v rsync &>/dev/null || sudo apt update && sudo apt install -y rsync  2>/dev/null "
 #ssh ${SSH_OPTIONS} ${VM2} "command -v rsync &>/dev/null || sudo apt update && sudo apt install -y rsync  2>/dev/null "
 
-echo "Копирование $SRC_DIR ..."
+echo "Копирование c VM1 $SRC_DIR с удалением не соответствующих файлов на VM2"
 # sudo rsync на VM1 позволяет читать директорию с правами 700 postgres:postgres
 # --rsync-path='sudo rsync' запускает rsync от root на VM2 для сохранения метаданных
-ssh ${SSH_OPTIONS} ${VM1} "sudo rsync -avz --rsync-path='sudo rsync' \
+ssh ${SSH_OPTIONS} ${VM1} "sudo rsync -avz --delete --rsync-path='sudo rsync' \
   -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  -i /home/yc-user/.ssh/$KEY_NAME' \
   ${SRC_DIR} ${VM2}:${DST_DIR}"
 

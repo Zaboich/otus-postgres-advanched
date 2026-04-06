@@ -27,11 +27,13 @@ sudo chown postgres:postgres /var/lib/postgresql/.walg.json
 sudo chmod 600 /var/lib/postgresql/.walg.json
 
 echo "Добавление параметров конфигурации для резервного копирования в postgres "
-echo "wal_level=replica" | sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
-echo "archive_mode=on"   | sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
-echo "archive_timeout=60"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
-echo "archive_command = '/usr/local/bin/wal-g wal-push %p'"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
-echo "restore_command = '/usr/local/bin/wal-g wal-fetch %f %p'"| sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
+echo "
+wal_level=replica
+archive_mode=on
+archive_timeout=60
+archive_command = '/usr/local/bin/wal-g wal-push %p'
+restore_command = '/usr/local/bin/wal-g wal-fetch %f %p'
+" | sudo -u postgres tee -a /etc/postgresql/18/main/conf.d/wal-g.conf
 
 sudo systemctl restart postgresql
 

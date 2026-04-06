@@ -8,6 +8,9 @@ export LC_ALL="C.UTF-8"
 HOSTNAME=$(hostname)
 NUM=${HOSTNAME: -1}
 
+# TIMESTAMP точки восстановления. latest - последняя доступная точка WAL файлов
+RECOVERY_TIMESTAMP=${1:-latest}
+
 #sudo systemctl stop postgresql && echo "${HOSTNAME} остановлен сервис Postgres"
 sudo pg_ctlcluster 18 main stop && echo "${HOSTNAME} остановлен cluster Postgres main"
 
@@ -26,8 +29,16 @@ else
   echo "${HOSTNAME} файл recovery.signal сущесвует";
 fi
 
+# recovery_target_timeline = 'latest' timestamp до которого надо восстановиться
+# recovery_target_action = 'promote' Действие после восстановления (promote переведет базу в режим read-write)
+echo "Устанавливаем время точку восстановления - ${RECOVERY_TIMESTAMP}"
+echo "
+recovery_target_timeline = ${RECOVERY_TIMESTAMP}
+recovery_target_action = promote
+" | sudo -u postgres tee -a /var/lib/postgresql/18/main/postgresql.auto.conf
+
+
 sudo chown -R postgres:postgres /var/lib/postgresql/
 
 echo "${HOSTNAME} Стартуем Postgres"
-
 sudo pg_ctlcluster 18 main start && echo "${HOSTNAME} стартовал сервис Postgres"

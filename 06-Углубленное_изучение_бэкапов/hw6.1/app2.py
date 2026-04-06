@@ -132,7 +132,7 @@ def main():
                     print(f"⚠ Ошибка вставки: {e}")
 
                 # Точное планирование следующего шага (ровно 1 секунда)
-                next_tick += 1.0
+                next_tick += 0.3
                 sleep_time = next_tick - time.time()
                 if sleep_time > 0:
                     time.sleep(sleep_time)
