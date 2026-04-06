@@ -19,7 +19,7 @@ export TEST_VM=2
 BACKUP_PGBASEBACKUP=0
 export BACKUP_WALG=1
 BACKUP_PROBACKUP=0
-export APP_WORKTIME=30
+export APP_WORKTIME=600
 #vm для восстановления БД
 export RESTORED_POSTGRES=2
 # Имена ресурсов
@@ -196,7 +196,7 @@ ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$TEST_VM]} "export LANGUAGE='C.UTF-8' && ex
 echo "Сравниваем количество строк в таблице bookings на серверах ${VMN}${TEST_VM} и ${VMN}${BACKUP_WALG} (вручную)"
 echo "------------------------------------------------"
 
-echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждые 0.3 секунду добавляет запись в таблицу booking"
+echo "${VMN}${BACKUP_WALG} Запускаем приложение, которое каждые 0.1 секунду добавляет запись в таблицу booking"
 (ssh ${SSH_OPTIONS} yc-user@${ADDR_VM[$BACKUP_WALG]} "source /opt/app/bin/activate; python /tmp/app2.py 6000;" && echo "${VMN}${BACKUP_WALG} Приложение-клиент остановлено") &
 echo "$(date)"
 echo "${VMN}${BACKUP_WALG} Приложение продолжает работать. Ожидаем ${APP_WORKTIME} сек и останавливаем сервис posgres, при этом приложение остановится после ошибки запроса SQL"
