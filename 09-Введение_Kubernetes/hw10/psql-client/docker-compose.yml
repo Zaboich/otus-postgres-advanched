@@ -1,0 +1,10 @@
+services:
+  psql:
+    tty: true
+    image: postgres:18-alpine
+    entrypoint: ['/bin/bash']
+    extra_hosts:
+      - host.loc:host-gateway
+
+
+

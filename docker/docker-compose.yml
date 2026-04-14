@@ -1,13 +1,15 @@
 services:
   ubuntu:
     tty: true
-    image: ubuntu:26.04
+    image: postgres:18-alpine
 #    user: ubuntu
-    volumes:
-      - ./entrypoint.sh:/entrypoint.sh
-#    entrypoint: /entrypoint.sh
-#    ports:
-#      - 127.0.0.1:5432:5432
+#    volumes:
+#      - ./entrypoint.sh:/entrypoint.sh
+    entrypoint: ['/bin/bash']
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 127.0.0.1:5432:5432
 
 
 
