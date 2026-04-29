@@ -1,23 +1,33 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: postgres-ns
+  name: pg-ns
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-secret
-  namespace: postgres-ns
+  namespace: pg-ns
 type: Opaque
 stringData:
   POSTGRES_USER: "postgres"
   POSTGRES_PASSWORD: "postgres"
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: pg-ns
+data:
+  pg_hba.conf: |
+    local   all             all                                     peer
+    host    all             all             0.0.0.0/0            scram-sha-256
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: postgres-ns
+  namespace: pg-ns
 spec:
   accessModes:
     - ReadWriteOnce
@@ -30,18 +40,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment-postgres-18
-  namespace: postgres-ns
+  namespace: pg-ns
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: postgres
       version: "18"
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1     # Максимум 1 под может быть недоступен
-      maxSurge: 1           # Максимум 1 дополнительный под при обновлении
   template:
     metadata:
       labels:
@@ -50,7 +55,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:18.1-alpine
+          image: postgres:18.3-alpine
           ports:
             - containerPort: 5432
           env:
@@ -61,11 +66,17 @@ spec:
                   key: POSTGRES_PASSWORD
             # Подкаталог избегает проблем с правами доступа к смонтированному тому
             - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
+              value: /var/lib/postgresql/18/docker
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql/18
+            - name: postgres-config
+              mountPath: /var/lib/postgres/18/docker/pg_hba.conf
+              subPath: pg_hba.conf
       volumes:
+        - name: postgres-config
+          configMap:
+            name: postgres-config
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
@@ -74,7 +85,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: postgres-ns
+  namespace: pg-ns
 spec:
   type: NodePort
   ports:

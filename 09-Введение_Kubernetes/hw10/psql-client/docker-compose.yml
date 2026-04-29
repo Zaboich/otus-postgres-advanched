@@ -1,7 +1,7 @@
 services:
-  psql:
+  psql-client:
     tty: true
-    image: postgres:18-alpine
+    image: postgres:18.3-alpine
     entrypoint: ['/bin/bash']
     extra_hosts:
       - host.loc:host-gateway
