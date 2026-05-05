@@ -29,38 +29,36 @@ CONFIG = {
     "db_user": "postgres",
     "db_password": "password_test",
     "volume_name": "pg_bench",
-    "pgbench_scale": 50,  # 100 -> ~1.6 ГБ при стандартной схеме pgbench
+    "pgbench_scale": 150,  # 100 -> ~1.6 ГБ при стандартной схеме pgbench
 
     # Параметры pgbench
     "warmup": {
         "clients": 16,
         "threads": 4,
-        "time_sec": 10,
+        "time_sec": 20,
         "command": "default"  # или путь к .sql файлу: "-f /path/to/custom.sql"
     },
     "test": {
         "clients": 32,
         "threads": 8,
-        "time_sec": 30,
+        "time_sec": 90,
         "command": "default"
     },
 
     # Пространство параметров для оптимизации
     "tunable_params": {
-        "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB"]},
+        "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB", "16GB"]},
         "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},  # MB
-        "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 128},  # MB
-        "max_parallel_workers_per_gather": {"type": "categorical", "values": [3,5,7,9,11]},
-        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.95},
-        "random_page_cost": {"type": "float", "low": 1.0, "high": 1.3},
-        "effective_cache_size": {"type": "int", "low": 4, "high": 24, "step": 4}  # GB
+        "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7]},
+        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.99},
+        "effective_cache_size": {"type": "int", "low": 4096, "high": 24576, "step": 4096}  # GB
     },
 
     # Оптимизация
     "checked_params":["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
-    "optimization_target": "tps",  # "tps" (максимизировать) или "latency_avg" (минимизировать)
-    "n_trials": 5,
-    "results_file": "pg_tuning_results.csv"
+    "optimization_target": "tps",  # "tps" (максимизировать) или "latency average" (минимизировать)
+    "n_trials": 150,
+    "results_file": "results.csv"
 }
 
 # ==============================================================================
@@ -214,7 +212,7 @@ class PostgresConfigOptimizer:
         self._cleanup()
 
         # Оптимизация
-        direction = "maximize" if "tps" in self.cfg["optimization_target"] else "minimize"
+        direction = "maximize" if self.cfg["optimization_target"] in ["tps", "number of transactions actually processed"] else "minimize"
         study = optuna.create_study(direction=direction, sampler=optuna.samplers.TPESampler(seed=42))
         study.optimize(self.objective, n_trials=self.cfg["n_trials"], show_progress_bar=True)
 
