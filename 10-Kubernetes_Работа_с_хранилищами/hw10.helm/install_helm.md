@@ -22,7 +22,8 @@ helm repo add bitnami https://bitnami.com
 
 https://repo.broadcom.com/bitnami-files/
 
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm repo add bitnami https://charts.bitnami.com/bitnami  
+
 $ helm search repo bitnami
 
 helm search repo bitnami | grep postgres
