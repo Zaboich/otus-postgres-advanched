@@ -17,6 +17,7 @@ import optuna
 import pandas as pd
 from typing import Dict, Any, List
 from pathlib import Path
+from optuna.importance import FanovaImportanceEvaluator, get_param_importances
 
 # ==============================================================================
 # 🔧 КОНФИГУРАЦИЯ СИСТЕМЫ
@@ -33,31 +34,33 @@ CONFIG = {
 
     # Параметры pgbench
     "warmup": {
-        "clients": 16,
-        "threads": 4,
-        "time_sec": 20,
+        "clients": 32,
+        "threads": 2,
+        "time_sec": 10,
         "command": "default"  # или путь к .sql файлу: "-f /path/to/custom.sql"
     },
     "test": {
-        "clients": 32,
-        "threads": 8,
-        "time_sec": 90,
+        "clients": 64,
+        "threads": 2,
+        "time_sec": 60,
         "command": "default"
     },
 
     # Пространство параметров для оптимизации
     "tunable_params": {
-        "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB", "16GB"]},
+        "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB"]},
         "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},  # MB
-        "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7]},
-        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.99},
-        "effective_cache_size": {"type": "int", "low": 4096, "high": 24576, "step": 4096}  # GB
+        "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},  # MB
+        "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7,9,11,13]},
+        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.95},
+        "random_page_cost": {"type": "float", "low": 1.0, "high": 1.3},
+        "effective_cache_size": {"type": "int", "low": 4, "high": 24, "step": 4}  # GB
     },
 
     # Оптимизация
     "checked_params":["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
     "optimization_target": "tps",  # "tps" (максимизировать) или "latency average" (минимизировать)
-    "n_trials": 150,
+    "n_trials": 50,
     "results_file": "results.csv"
 }
 
@@ -225,10 +228,64 @@ class PostgresConfigOptimizer:
         print(f"🏆 {self.cfg['optimization_target']}: {study.best_value:.2f}")
         print(f"📁 Результаты сохранены в: {self.cfg['results_file']}")
 
-        # Вывод таблицы
+        # 🔥 Вывод отсортированной таблицы результатов
         df = pd.read_csv(self.cfg["results_file"])
-        print("\n📋 Таблица результатов (первые 5 строк):")
-        print(df.head().to_markdown(index=False))
+
+        # Сортировка по целевой метрике
+        target_col = self.cfg["optimization_target"]
+        direction = "maximize" if target_col in ["tps", "number of transactions actually processed"] else "minimize"
+
+        if direction == "maximize":
+            df_sorted = df.sort_values(by=target_col, ascending=False).head(5)
+            sort_label = "🔼 ТОП-5 по максимизации"
+        else:
+            df_sorted = df.sort_values(by=target_col, ascending=True).head(5)
+            sort_label = "🔽 ТОП-5 по минимизации"
+
+        print(f"\n📋 {sort_label} '{target_col}':")
+        # Форматируем числовые колонки для читаемости
+        numeric_cols = df_sorted.select_dtypes(include='number').columns
+        display_df = df_sorted.copy()
+        for col in numeric_cols:
+            if col != "trial":  # trial оставляем как int
+                display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "N/A")
+        print(display_df.to_markdown(index=False))
+
+        # Дополнительно: статистика по целевой метрике
+        print(f"\n📈 Статистика по '{target_col}':")
+        print(f"   Min: {df[target_col].min():.2f} | Max: {df[target_col].max():.2f} | Mean: {df[target_col].mean():.2f} | Std: {df[target_col].std():.2f}")
+
+        # 🔥 Вывод важности гиперпараметров
+        print(f"\n🎯 Важность гиперпараметров (оценка влияния на '{target_col}'):")
+        try:
+
+
+            # Вычисляем важности только для tunable_params
+            tunable_names = list(self.cfg["tunable_params"].keys())
+            importances = get_param_importances(
+                study,
+                evaluator=FanovaImportanceEvaluator(seed=42),
+                params=tunable_names,
+                target=lambda t: t.value if direction == "maximize" else -t.value  # корректная обработка направления
+            )
+
+            # Сортируем и форматируем
+            importances_sorted = dict(sorted(importances.items(), key=lambda x: x[1], reverse=True))
+
+            print(f"{'Параметр':<40} {'Важность':>10} {'Визуализация'}")
+            print("-" * 70)
+            for param, imp in importances_sorted.items():
+                bar_len = int(imp * 50)  # шкала до 50 символов
+                bar = "█" * bar_len
+                print(f"{param:<40} {imp*100:6.2f}%  {bar}")
+
+            # Подсказка по интерпретации
+            top_param = next(iter(importances_sorted))
+            print(f"\n💡 Параметр '{top_param}' наиболее сильно влияет на {target_col}.")
+
+        except Exception as e:
+            print(f"⚠️ Не удалось рассчитать важности: {e}")
+            print("   Убедитесь, что выполнено >= 10 успешных испытаний.")
 
         self._cleanup()
         self._cleanup_on_exit = False

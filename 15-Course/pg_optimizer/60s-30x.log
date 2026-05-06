@@ -1,0 +1,906 @@
+[CMD] docker volume create pg_bench || true
+[INIT] Starting container for DB initialization...
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine 
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[DB] Initializing pgbench with scale=150...
+[CMD] docker exec tuning bash -c 'dropdb benchdb; createdb benchdb; pgbench -iqs 150 benchdb'
+[CMD] docker exec tuning psql -U postgres -d benchdb -c 'ANALYZE;'
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+
+========================================
+[Trial 0] Config: {'shared_buffers': '4GB', 'work_mem': '40MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': '0.7454562418017752', 'random_page_cost': '1.0550213529560302', 'effective_cache_size': '8MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=40MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=9 -c checkpoint_completion_target=0.7454562418017752 -c random_page_cost=1.0550213529560302 -c effective_cache_size=8MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 0] TPS: 5869.59 | Latency Avg: 10.90 ms
+[32m[I 2026-05-06 16:43:05,875][0m Trial 0 finished with value: 5869.593814 and parameters: {'shared_buffers': '4GB', 'work_mem': 40, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': 0.7454562418017752, 'random_page_cost': 1.0550213529560302, 'effective_cache_size': 8}. Best is trial 0 with value: 5869.593814.[0m
+
+========================================
+[Trial 1] Config: {'shared_buffers': '2GB', 'work_mem': '40MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.7426310309218228', 'random_page_cost': '1.019515477895584', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=40MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.7426310309218228 -c random_page_cost=1.019515477895584 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 1] TPS: 6346.27 | Latency Avg: 10.09 ms
+[32m[I 2026-05-06 16:44:21,810][0m Trial 1 finished with value: 6346.274185 and parameters: {'shared_buffers': '2GB', 'work_mem': 40, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.7426310309218228, 'random_page_cost': 1.019515477895584, 'effective_cache_size': 24}. Best is trial 1 with value: 6346.274185.[0m
+
+========================================
+[Trial 2] Config: {'shared_buffers': '2GB', 'work_mem': '8MB', 'maintenance_work_mem': '704MB', 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': '0.8366775698358199', 'random_page_cost': '1.0554563366576581', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=8MB -c maintenance_work_mem=704MB -c max_parallel_workers_per_gather=5 -c checkpoint_completion_target=0.8366775698358199 -c random_page_cost=1.0554563366576581 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 2] TPS: 7839.00 | Latency Avg: 8.16 ms
+[32m[I 2026-05-06 16:45:37,795][0m Trial 2 finished with value: 7839.003016 and parameters: {'shared_buffers': '2GB', 'work_mem': 8, 'maintenance_work_mem': 704, 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': 0.8366775698358199, 'random_page_cost': 1.0554563366576581, 'effective_cache_size': 24}. Best is trial 2 with value: 7839.003016.[0m
+
+========================================
+[Trial 3] Config: {'shared_buffers': '4GB', 'work_mem': '40MB', 'maintenance_work_mem': '960MB', 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': '0.8356740207895621', 'random_page_cost': '1.0422772674924288', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=40MB -c maintenance_work_mem=960MB -c max_parallel_workers_per_gather=9 -c checkpoint_completion_target=0.8356740207895621 -c random_page_cost=1.0422772674924288 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 3] TPS: 6734.48 | Latency Avg: 9.50 ms
+[32m[I 2026-05-06 16:46:53,990][0m Trial 3 finished with value: 6734.484328 and parameters: {'shared_buffers': '4GB', 'work_mem': 40, 'maintenance_work_mem': 960, 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': 0.8356740207895621, 'random_page_cost': 1.0422772674924288, 'effective_cache_size': 20}. Best is trial 2 with value: 7839.003016.[0m
+
+========================================
+[Trial 4] Config: {'shared_buffers': '4GB', 'work_mem': '16MB', 'maintenance_work_mem': '64MB', 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': '0.7827245062131623', 'random_page_cost': '1.0190675050858071', 'effective_cache_size': '8MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=16MB -c maintenance_work_mem=64MB -c max_parallel_workers_per_gather=11 -c checkpoint_completion_target=0.7827245062131623 -c random_page_cost=1.0190675050858071 -c effective_cache_size=8MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 4] TPS: 7603.98 | Latency Avg: 8.42 ms
+[32m[I 2026-05-06 16:48:10,252][0m Trial 4 finished with value: 7603.98349 and parameters: {'shared_buffers': '4GB', 'work_mem': 16, 'maintenance_work_mem': 64, 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': 0.7827245062131623, 'random_page_cost': 1.0190675050858071, 'effective_cache_size': 8}. Best is trial 2 with value: 7839.003016.[0m
+
+========================================
+[Trial 5] Config: {'shared_buffers': '4GB', 'work_mem': '60MB', 'maintenance_work_mem': '512MB', 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': '0.726972856748326', 'random_page_cost': '1.0094287557060202', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=60MB -c maintenance_work_mem=512MB -c max_parallel_workers_per_gather=5 -c checkpoint_completion_target=0.726972856748326 -c random_page_cost=1.0094287557060202 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 5] TPS: 6643.72 | Latency Avg: 9.63 ms
+[32m[I 2026-05-06 16:49:26,213][0m Trial 5 finished with value: 6643.715157 and parameters: {'shared_buffers': '4GB', 'work_mem': 60, 'maintenance_work_mem': 512, 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': 0.726972856748326, 'random_page_cost': 1.0094287557060202, 'effective_cache_size': 16}. Best is trial 2 with value: 7839.003016.[0m
+
+========================================
+[Trial 6] Config: {'shared_buffers': '8GB', 'work_mem': '16MB', 'maintenance_work_mem': '448MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.9009180192247785', 'random_page_cost': '1.0559710176658108', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=16MB -c maintenance_work_mem=448MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.9009180192247785 -c random_page_cost=1.0559710176658108 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 6] TPS: 8158.09 | Latency Avg: 7.84 ms
+[32m[I 2026-05-06 16:50:42,430][0m Trial 6 finished with value: 8158.09198 and parameters: {'shared_buffers': '8GB', 'work_mem': 16, 'maintenance_work_mem': 448, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.9009180192247785, 'random_page_cost': 1.0559710176658108, 'effective_cache_size': 24}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 7] Config: {'shared_buffers': '8GB', 'work_mem': '24MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.7844037928509069', 'random_page_cost': '1.2828729111737558', 'effective_cache_size': '8MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=24MB -c maintenance_work_mem=128MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.7844037928509069 -c random_page_cost=1.2828729111737558 -c effective_cache_size=8MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 7] TPS: 7159.96 | Latency Avg: 8.94 ms
+[32m[I 2026-05-06 16:51:58,326][0m Trial 7 finished with value: 7159.964252 and parameters: {'shared_buffers': '8GB', 'work_mem': 24, 'maintenance_work_mem': 128, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.7844037928509069, 'random_page_cost': 1.2828729111737558, 'effective_cache_size': 8}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 8] Config: {'shared_buffers': '4GB', 'work_mem': '64MB', 'maintenance_work_mem': '1024MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.9270664714916634', 'random_page_cost': '1.0718685672000918', 'effective_cache_size': '4MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=64MB -c maintenance_work_mem=1024MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.9270664714916634 -c random_page_cost=1.0718685672000918 -c effective_cache_size=4MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 8] TPS: 7835.73 | Latency Avg: 8.17 ms
+[32m[I 2026-05-06 16:53:14,299][0m Trial 8 finished with value: 7835.728706 and parameters: {'shared_buffers': '4GB', 'work_mem': 64, 'maintenance_work_mem': 1024, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.9270664714916634, 'random_page_cost': 1.0718685672000918, 'effective_cache_size': 4}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 9] Config: {'shared_buffers': '4GB', 'work_mem': '44MB', 'maintenance_work_mem': '832MB', 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': '0.7466296275999635', 'random_page_cost': '1.0122325424664291', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=44MB -c maintenance_work_mem=832MB -c max_parallel_workers_per_gather=11 -c checkpoint_completion_target=0.7466296275999635 -c random_page_cost=1.0122325424664291 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 9] TPS: 6787.38 | Latency Avg: 9.43 ms
+[32m[I 2026-05-06 16:54:30,213][0m Trial 9 finished with value: 6787.383867 and parameters: {'shared_buffers': '4GB', 'work_mem': 44, 'maintenance_work_mem': 832, 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': 0.7466296275999635, 'random_page_cost': 1.0122325424664291, 'effective_cache_size': 16}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 10] Config: {'shared_buffers': '8GB', 'work_mem': '4MB', 'maintenance_work_mem': '448MB', 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': '0.9251502661461086', 'random_page_cost': '1.1341959583645287', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=4MB -c maintenance_work_mem=448MB -c max_parallel_workers_per_gather=0 -c checkpoint_completion_target=0.9251502661461086 -c random_page_cost=1.1341959583645287 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 10] TPS: 7855.19 | Latency Avg: 8.15 ms
+[32m[I 2026-05-06 16:55:46,237][0m Trial 10 finished with value: 7855.186307 and parameters: {'shared_buffers': '8GB', 'work_mem': 4, 'maintenance_work_mem': 448, 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': 0.9251502661461086, 'random_page_cost': 1.1341959583645287, 'effective_cache_size': 20}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 11] Config: {'shared_buffers': '8GB', 'work_mem': '4MB', 'maintenance_work_mem': '448MB', 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': '0.9364524299934283', 'random_page_cost': '1.1387033759264937', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=4MB -c maintenance_work_mem=448MB -c max_parallel_workers_per_gather=0 -c checkpoint_completion_target=0.9364524299934283 -c random_page_cost=1.1387033759264937 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 11] TPS: 7877.42 | Latency Avg: 8.12 ms
+[32m[I 2026-05-06 16:57:02,237][0m Trial 11 finished with value: 7877.41704 and parameters: {'shared_buffers': '8GB', 'work_mem': 4, 'maintenance_work_mem': 448, 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': 0.9364524299934283, 'random_page_cost': 1.1387033759264937, 'effective_cache_size': 20}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 12] Config: {'shared_buffers': '8GB', 'work_mem': '20MB', 'maintenance_work_mem': '448MB', 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': '0.8882512191270074', 'random_page_cost': '1.1495034079233049', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=20MB -c maintenance_work_mem=448MB -c max_parallel_workers_per_gather=0 -c checkpoint_completion_target=0.8882512191270074 -c random_page_cost=1.1495034079233049 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 12] TPS: 6846.00 | Latency Avg: 9.35 ms
+[32m[I 2026-05-06 16:58:18,218][0m Trial 12 finished with value: 6846.002522 and parameters: {'shared_buffers': '8GB', 'work_mem': 20, 'maintenance_work_mem': 448, 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': 0.8882512191270074, 'random_page_cost': 1.1495034079233049, 'effective_cache_size': 20}. Best is trial 6 with value: 8158.09198.[0m
+
+========================================
+[Trial 13] Config: {'shared_buffers': '8GB', 'work_mem': '12MB', 'maintenance_work_mem': '320MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8873271901464095', 'random_page_cost': '1.231578875128058', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=12MB -c maintenance_work_mem=320MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8873271901464095 -c random_page_cost=1.231578875128058 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 13] TPS: 8285.75 | Latency Avg: 7.72 ms
+[32m[I 2026-05-06 16:59:34,181][0m Trial 13 finished with value: 8285.745162 and parameters: {'shared_buffers': '8GB', 'work_mem': 12, 'maintenance_work_mem': 320, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8873271901464095, 'random_page_cost': 1.231578875128058, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 14] Config: {'shared_buffers': '8GB', 'work_mem': '28MB', 'maintenance_work_mem': '320MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8738593530607148', 'random_page_cost': '1.2489965842249016', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=28MB -c maintenance_work_mem=320MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8738593530607148 -c random_page_cost=1.2489965842249016 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 14] TPS: 6470.75 | Latency Avg: 9.89 ms
+[32m[I 2026-05-06 17:00:50,244][0m Trial 14 finished with value: 6470.748231 and parameters: {'shared_buffers': '8GB', 'work_mem': 28, 'maintenance_work_mem': 320, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8738593530607148, 'random_page_cost': 1.2489965842249016, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 15] Config: {'shared_buffers': '8GB', 'work_mem': '12MB', 'maintenance_work_mem': '640MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8821942879774838', 'random_page_cost': '1.2008195074895183', 'effective_cache_size': '12MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=12MB -c maintenance_work_mem=640MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8821942879774838 -c random_page_cost=1.2008195074895183 -c effective_cache_size=12MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 15] TPS: 6716.06 | Latency Avg: 9.53 ms
+[32m[I 2026-05-06 17:02:06,261][0m Trial 15 finished with value: 6716.058132 and parameters: {'shared_buffers': '8GB', 'work_mem': 12, 'maintenance_work_mem': 640, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8821942879774838, 'random_page_cost': 1.2008195074895183, 'effective_cache_size': 12}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 16] Config: {'shared_buffers': '8GB', 'work_mem': '28MB', 'maintenance_work_mem': '320MB', 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': '0.8966569679424996', 'random_page_cost': '1.208028600986015', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=28MB -c maintenance_work_mem=320MB -c max_parallel_workers_per_gather=13 -c checkpoint_completion_target=0.8966569679424996 -c random_page_cost=1.208028600986015 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 16] TPS: 7073.99 | Latency Avg: 9.05 ms
+[32m[I 2026-05-06 17:03:22,163][0m Trial 16 finished with value: 7073.993517 and parameters: {'shared_buffers': '8GB', 'work_mem': 28, 'maintenance_work_mem': 320, 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': 0.8966569679424996, 'random_page_cost': 1.208028600986015, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 17] Config: {'shared_buffers': '8GB', 'work_mem': '16MB', 'maintenance_work_mem': '320MB', 'max_parallel_workers_per_gather': 1, 'checkpoint_completion_target': '0.8550154167406958', 'random_page_cost': '1.0959617720790662', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=16MB -c maintenance_work_mem=320MB -c max_parallel_workers_per_gather=1 -c checkpoint_completion_target=0.8550154167406958 -c random_page_cost=1.0959617720790662 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 17] TPS: 6456.58 | Latency Avg: 9.91 ms
+[32m[I 2026-05-06 17:04:38,139][0m Trial 17 finished with value: 6456.580658 and parameters: {'shared_buffers': '8GB', 'work_mem': 16, 'maintenance_work_mem': 320, 'max_parallel_workers_per_gather': 1, 'checkpoint_completion_target': 0.8550154167406958, 'random_page_cost': 1.0959617720790662, 'effective_cache_size': 16}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 18] Config: {'shared_buffers': '2GB', 'work_mem': '52MB', 'maintenance_work_mem': '640MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.9101613105072518', 'random_page_cost': '1.1900856448900918', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=52MB -c maintenance_work_mem=640MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.9101613105072518 -c random_page_cost=1.1900856448900918 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 18] TPS: 7979.07 | Latency Avg: 8.02 ms
+[32m[I 2026-05-06 17:05:54,179][0m Trial 18 finished with value: 7979.07018 and parameters: {'shared_buffers': '2GB', 'work_mem': 52, 'maintenance_work_mem': 640, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.9101613105072518, 'random_page_cost': 1.1900856448900918, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 19] Config: {'shared_buffers': '8GB', 'work_mem': '32MB', 'maintenance_work_mem': '256MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.806645798463177', 'random_page_cost': '1.2993494669252978', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=32MB -c maintenance_work_mem=256MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.806645798463177 -c random_page_cost=1.2993494669252978 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 19] TPS: 7381.98 | Latency Avg: 8.67 ms
+[32m[I 2026-05-06 17:07:10,145][0m Trial 19 finished with value: 7381.975555 and parameters: {'shared_buffers': '8GB', 'work_mem': 32, 'maintenance_work_mem': 256, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.806645798463177, 'random_page_cost': 1.2993494669252978, 'effective_cache_size': 20}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 20] Config: {'shared_buffers': '8GB', 'work_mem': '12MB', 'maintenance_work_mem': '768MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8651768002282222', 'random_page_cost': '1.1070111909124214', 'effective_cache_size': '12MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=12MB -c maintenance_work_mem=768MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8651768002282222 -c random_page_cost=1.1070111909124214 -c effective_cache_size=12MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 20] TPS: 7085.62 | Latency Avg: 9.03 ms
+[32m[I 2026-05-06 17:08:26,183][0m Trial 20 finished with value: 7085.622262 and parameters: {'shared_buffers': '8GB', 'work_mem': 12, 'maintenance_work_mem': 768, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8651768002282222, 'random_page_cost': 1.1070111909124214, 'effective_cache_size': 12}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 21] Config: {'shared_buffers': '2GB', 'work_mem': '56MB', 'maintenance_work_mem': '576MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.908938194127265', 'random_page_cost': '1.194048059393867', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=56MB -c maintenance_work_mem=576MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.908938194127265 -c random_page_cost=1.194048059393867 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 21] TPS: 8105.57 | Latency Avg: 7.90 ms
+[32m[I 2026-05-06 17:09:42,345][0m Trial 21 finished with value: 8105.566001 and parameters: {'shared_buffers': '2GB', 'work_mem': 56, 'maintenance_work_mem': 576, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.908938194127265, 'random_page_cost': 1.194048059393867, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 22] Config: {'shared_buffers': '2GB', 'work_mem': '52MB', 'maintenance_work_mem': '576MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.9495114574625664', 'random_page_cost': '1.2351378181352712', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=52MB -c maintenance_work_mem=576MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.9495114574625664 -c random_page_cost=1.2351378181352712 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 22] TPS: 8255.87 | Latency Avg: 7.75 ms
+[32m[I 2026-05-06 17:10:58,360][0m Trial 22 finished with value: 8255.869729 and parameters: {'shared_buffers': '2GB', 'work_mem': 52, 'maintenance_work_mem': 576, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.9495114574625664, 'random_page_cost': 1.2351378181352712, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 23] Config: {'shared_buffers': '2GB', 'work_mem': '52MB', 'maintenance_work_mem': '384MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.9429159232323909', 'random_page_cost': '1.2383365776922162', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=52MB -c maintenance_work_mem=384MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.9429159232323909 -c random_page_cost=1.2383365776922162 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 23] TPS: 6672.05 | Latency Avg: 9.59 ms
+[32m[I 2026-05-06 17:12:14,328][0m Trial 23 finished with value: 6672.052921 and parameters: {'shared_buffers': '2GB', 'work_mem': 52, 'maintenance_work_mem': 384, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.9429159232323909, 'random_page_cost': 1.2383365776922162, 'effective_cache_size': 20}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 24] Config: {'shared_buffers': '2GB', 'work_mem': '20MB', 'maintenance_work_mem': '576MB', 'max_parallel_workers_per_gather': 1, 'checkpoint_completion_target': '0.9475712725384421', 'random_page_cost': '1.2485743417340411', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=20MB -c maintenance_work_mem=576MB -c max_parallel_workers_per_gather=1 -c checkpoint_completion_target=0.9475712725384421 -c random_page_cost=1.2485743417340411 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 24] TPS: 7599.50 | Latency Avg: 8.42 ms
+[32m[I 2026-05-06 17:13:30,309][0m Trial 24 finished with value: 7599.501857 and parameters: {'shared_buffers': '2GB', 'work_mem': 20, 'maintenance_work_mem': 576, 'max_parallel_workers_per_gather': 1, 'checkpoint_completion_target': 0.9475712725384421, 'random_page_cost': 1.2485743417340411, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 25] Config: {'shared_buffers': '2GB', 'work_mem': '48MB', 'maintenance_work_mem': '512MB', 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': '0.9092265395185006', 'random_page_cost': '1.1706131934430006', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=48MB -c maintenance_work_mem=512MB -c max_parallel_workers_per_gather=13 -c checkpoint_completion_target=0.9092265395185006 -c random_page_cost=1.1706131934430006 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 25] TPS: 7939.82 | Latency Avg: 8.06 ms
+[32m[I 2026-05-06 17:14:46,306][0m Trial 25 finished with value: 7939.823979 and parameters: {'shared_buffers': '2GB', 'work_mem': 48, 'maintenance_work_mem': 512, 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': 0.9092265395185006, 'random_page_cost': 1.1706131934430006, 'effective_cache_size': 24}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 26] Config: {'shared_buffers': '8GB', 'work_mem': '32MB', 'maintenance_work_mem': '384MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.9156617942106456', 'random_page_cost': '1.2307390038369241', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=8GB -c work_mem=32MB -c maintenance_work_mem=384MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.9156617942106456 -c random_page_cost=1.2307390038369241 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 26] TPS: 6470.69 | Latency Avg: 9.89 ms
+[32m[I 2026-05-06 17:16:02,302][0m Trial 26 finished with value: 6470.685822 and parameters: {'shared_buffers': '8GB', 'work_mem': 32, 'maintenance_work_mem': 384, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.9156617942106456, 'random_page_cost': 1.2307390038369241, 'effective_cache_size': 20}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 27] Config: {'shared_buffers': '2GB', 'work_mem': '8MB', 'maintenance_work_mem': '832MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8597263413923834', 'random_page_cost': '1.2782774835980029', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=8MB -c maintenance_work_mem=832MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8597263413923834 -c random_page_cost=1.2782774835980029 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 27] TPS: 8262.03 | Latency Avg: 7.75 ms
+[32m[I 2026-05-06 17:17:18,340][0m Trial 27 finished with value: 8262.025919 and parameters: {'shared_buffers': '2GB', 'work_mem': 8, 'maintenance_work_mem': 832, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8597263413923834, 'random_page_cost': 1.2782774835980029, 'effective_cache_size': 16}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 28] Config: {'shared_buffers': '2GB', 'work_mem': '8MB', 'maintenance_work_mem': '896MB', 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': '0.8539968064910781', 'random_page_cost': '1.2749126215673299', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=8MB -c maintenance_work_mem=896MB -c max_parallel_workers_per_gather=2 -c checkpoint_completion_target=0.8539968064910781 -c random_page_cost=1.2749126215673299 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 28] TPS: 7255.79 | Latency Avg: 8.82 ms
+[32m[I 2026-05-06 17:18:34,321][0m Trial 28 finished with value: 7255.789638 and parameters: {'shared_buffers': '2GB', 'work_mem': 8, 'maintenance_work_mem': 896, 'max_parallel_workers_per_gather': 2, 'checkpoint_completion_target': 0.8539968064910781, 'random_page_cost': 1.2749126215673299, 'effective_cache_size': 16}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 29] Config: {'shared_buffers': '2GB', 'work_mem': '36MB', 'maintenance_work_mem': '768MB', 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': '0.8064257076935569', 'random_page_cost': '1.2661509630074281', 'effective_cache_size': '12MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=36MB -c maintenance_work_mem=768MB -c max_parallel_workers_per_gather=9 -c checkpoint_completion_target=0.8064257076935569 -c random_page_cost=1.2661509630074281 -c effective_cache_size=12MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 29] TPS: 7829.95 | Latency Avg: 8.17 ms
+[32m[I 2026-05-06 17:19:50,275][0m Trial 29 finished with value: 7829.946892 and parameters: {'shared_buffers': '2GB', 'work_mem': 36, 'maintenance_work_mem': 768, 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': 0.8064257076935569, 'random_page_cost': 1.2661509630074281, 'effective_cache_size': 12}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 30] Config: {'shared_buffers': '2GB', 'work_mem': '8MB', 'maintenance_work_mem': '896MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8213009929475662', 'random_page_cost': '1.2170840249054846', 'effective_cache_size': '4MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=8MB -c maintenance_work_mem=896MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8213009929475662 -c random_page_cost=1.2170840249054846 -c effective_cache_size=4MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 30] TPS: 7397.79 | Latency Avg: 8.65 ms
+[32m[I 2026-05-06 17:21:06,267][0m Trial 30 finished with value: 7397.790257 and parameters: {'shared_buffers': '2GB', 'work_mem': 8, 'maintenance_work_mem': 896, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8213009929475662, 'random_page_cost': 1.2170840249054846, 'effective_cache_size': 4}. Best is trial 13 with value: 8285.745162.[0m
+
+========================================
+[Trial 31] Config: {'shared_buffers': '2GB', 'work_mem': '16MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8917684785074206', 'random_page_cost': '1.1711799119509012', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=16MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8917684785074206 -c random_page_cost=1.1711799119509012 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 31] TPS: 8317.54 | Latency Avg: 7.70 ms
+[32m[I 2026-05-06 17:22:22,227][0m Trial 31 finished with value: 8317.538324 and parameters: {'shared_buffers': '2GB', 'work_mem': 16, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8917684785074206, 'random_page_cost': 1.1711799119509012, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 32] Config: {'shared_buffers': '2GB', 'work_mem': '12MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8564944456076671', 'random_page_cost': '1.166684931952037', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=12MB -c maintenance_work_mem=128MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8564944456076671 -c random_page_cost=1.166684931952037 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 32] TPS: 6876.54 | Latency Avg: 9.31 ms
+[32m[I 2026-05-06 17:23:38,206][0m Trial 32 finished with value: 6876.544262 and parameters: {'shared_buffers': '2GB', 'work_mem': 12, 'maintenance_work_mem': 128, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8564944456076671, 'random_page_cost': 1.166684931952037, 'effective_cache_size': 20}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 33] Config: {'shared_buffers': '2GB', 'work_mem': '24MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.8768258478965547', 'random_page_cost': '1.26094485061933', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=24MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.8768258478965547 -c random_page_cost=1.26094485061933 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 33] TPS: 8231.97 | Latency Avg: 7.78 ms
+[32m[I 2026-05-06 17:24:54,134][0m Trial 33 finished with value: 8231.97244 and parameters: {'shared_buffers': '2GB', 'work_mem': 24, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.8768258478965547, 'random_page_cost': 1.26094485061933, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 34] Config: {'shared_buffers': '2GB', 'work_mem': '4MB', 'maintenance_work_mem': '256MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.834361479101469', 'random_page_cost': '1.2247196496974586', 'effective_cache_size': '8MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=4MB -c maintenance_work_mem=256MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.834361479101469 -c random_page_cost=1.2247196496974586 -c effective_cache_size=8MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 34] TPS: 7866.49 | Latency Avg: 8.14 ms
+[32m[I 2026-05-06 17:26:10,140][0m Trial 34 finished with value: 7866.490598 and parameters: {'shared_buffers': '2GB', 'work_mem': 4, 'maintenance_work_mem': 256, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.834361479101469, 'random_page_cost': 1.2247196496974586, 'effective_cache_size': 8}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 35] Config: {'shared_buffers': '2GB', 'work_mem': '20MB', 'maintenance_work_mem': '64MB', 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': '0.8932150551946118', 'random_page_cost': '1.2952318762772388', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=20MB -c maintenance_work_mem=64MB -c max_parallel_workers_per_gather=5 -c checkpoint_completion_target=0.8932150551946118 -c random_page_cost=1.2952318762772388 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 35] TPS: 6660.12 | Latency Avg: 9.61 ms
+[32m[I 2026-05-06 17:27:26,112][0m Trial 35 finished with value: 6660.119006 and parameters: {'shared_buffers': '2GB', 'work_mem': 20, 'maintenance_work_mem': 64, 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': 0.8932150551946118, 'random_page_cost': 1.2952318762772388, 'effective_cache_size': 20}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 36] Config: {'shared_buffers': '2GB', 'work_mem': '40MB', 'maintenance_work_mem': '704MB', 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': '0.8470847106722148', 'random_page_cost': '1.1738754346994518', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=40MB -c maintenance_work_mem=704MB -c max_parallel_workers_per_gather=9 -c checkpoint_completion_target=0.8470847106722148 -c random_page_cost=1.1738754346994518 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 36] TPS: 6537.39 | Latency Avg: 9.79 ms
+[32m[I 2026-05-06 17:28:42,198][0m Trial 36 finished with value: 6537.387924 and parameters: {'shared_buffers': '2GB', 'work_mem': 40, 'maintenance_work_mem': 704, 'max_parallel_workers_per_gather': 9, 'checkpoint_completion_target': 0.8470847106722148, 'random_page_cost': 1.1738754346994518, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 37] Config: {'shared_buffers': '2GB', 'work_mem': '12MB', 'maintenance_work_mem': '256MB', 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': '0.9286719807663573', 'random_page_cost': '1.250407099067566', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=12MB -c maintenance_work_mem=256MB -c max_parallel_workers_per_gather=11 -c checkpoint_completion_target=0.9286719807663573 -c random_page_cost=1.250407099067566 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 37] TPS: 7285.02 | Latency Avg: 8.79 ms
+[32m[I 2026-05-06 17:29:58,140][0m Trial 37 finished with value: 7285.021694 and parameters: {'shared_buffers': '2GB', 'work_mem': 12, 'maintenance_work_mem': 256, 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': 0.9286719807663573, 'random_page_cost': 1.250407099067566, 'effective_cache_size': 16}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 38] Config: {'shared_buffers': '4GB', 'work_mem': '8MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8724843907463564', 'random_page_cost': '1.2153085381954696', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=8MB -c maintenance_work_mem=128MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8724843907463564 -c random_page_cost=1.2153085381954696 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 38] TPS: 8103.86 | Latency Avg: 7.90 ms
+[32m[I 2026-05-06 17:31:14,181][0m Trial 38 finished with value: 8103.8591 and parameters: {'shared_buffers': '4GB', 'work_mem': 8, 'maintenance_work_mem': 128, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8724843907463564, 'random_page_cost': 1.2153085381954696, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 39] Config: {'shared_buffers': '2GB', 'work_mem': '16MB', 'maintenance_work_mem': '960MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8212243323138552', 'random_page_cost': '1.2813159778803327', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=16MB -c maintenance_work_mem=960MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8212243323138552 -c random_page_cost=1.2813159778803327 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 39] TPS: 6772.51 | Latency Avg: 9.45 ms
+[32m[I 2026-05-06 17:32:39,194][0m Trial 39 finished with value: 6772.510068 and parameters: {'shared_buffers': '2GB', 'work_mem': 16, 'maintenance_work_mem': 960, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8212243323138552, 'random_page_cost': 1.2813159778803327, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 40] Config: {'shared_buffers': '2GB', 'work_mem': '44MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': '0.8408287336350703', 'random_page_cost': '1.2638332727675063', 'effective_cache_size': '16MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=44MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=5 -c checkpoint_completion_target=0.8408287336350703 -c random_page_cost=1.2638332727675063 -c effective_cache_size=16MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 40] TPS: 6844.02 | Latency Avg: 9.35 ms
+[32m[I 2026-05-06 17:33:55,246][0m Trial 40 finished with value: 6844.023147 and parameters: {'shared_buffers': '2GB', 'work_mem': 44, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 5, 'checkpoint_completion_target': 0.8408287336350703, 'random_page_cost': 1.2638332727675063, 'effective_cache_size': 16}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 41] Config: {'shared_buffers': '2GB', 'work_mem': '24MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.8806955462582682', 'random_page_cost': '1.2594515958813621', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=24MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.8806955462582682 -c random_page_cost=1.2594515958813621 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 41] TPS: 7838.40 | Latency Avg: 8.16 ms
+[32m[I 2026-05-06 17:35:11,380][0m Trial 41 finished with value: 7838.398849 and parameters: {'shared_buffers': '2GB', 'work_mem': 24, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.8806955462582682, 'random_page_cost': 1.2594515958813621, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 42] Config: {'shared_buffers': '2GB', 'work_mem': '24MB', 'maintenance_work_mem': '64MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.8655777406126256', 'random_page_cost': '1.2306130385801837', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=24MB -c maintenance_work_mem=64MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.8655777406126256 -c random_page_cost=1.2306130385801837 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 42] TPS: 7565.62 | Latency Avg: 8.46 ms
+[32m[I 2026-05-06 17:36:27,590][0m Trial 42 finished with value: 7565.61532 and parameters: {'shared_buffers': '2GB', 'work_mem': 24, 'maintenance_work_mem': 64, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.8655777406126256, 'random_page_cost': 1.2306130385801837, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 43] Config: {'shared_buffers': '2GB', 'work_mem': '64MB', 'maintenance_work_mem': '192MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.8929237327435596', 'random_page_cost': '1.2784970140456484', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=64MB -c maintenance_work_mem=192MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.8929237327435596 -c random_page_cost=1.2784970140456484 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 43] TPS: 7681.71 | Latency Avg: 8.33 ms
+[32m[I 2026-05-06 17:37:43,797][0m Trial 43 finished with value: 7681.711704 and parameters: {'shared_buffers': '2GB', 'work_mem': 64, 'maintenance_work_mem': 192, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.8929237327435596, 'random_page_cost': 1.2784970140456484, 'effective_cache_size': 20}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 44] Config: {'shared_buffers': '4GB', 'work_mem': '20MB', 'maintenance_work_mem': '384MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.9208061900595982', 'random_page_cost': '1.1854906518673516', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=20MB -c maintenance_work_mem=384MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.9208061900595982 -c random_page_cost=1.1854906518673516 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 44] TPS: 6389.81 | Latency Avg: 10.02 ms
+[32m[I 2026-05-06 17:39:00,014][0m Trial 44 finished with value: 6389.812597 and parameters: {'shared_buffers': '4GB', 'work_mem': 20, 'maintenance_work_mem': 384, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.9208061900595982, 'random_page_cost': 1.1854906518673516, 'effective_cache_size': 20}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 45] Config: {'shared_buffers': '2GB', 'work_mem': '28MB', 'maintenance_work_mem': '1024MB', 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': '0.7010173081047282', 'random_page_cost': '1.2381504213283598', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=28MB -c maintenance_work_mem=1024MB -c max_parallel_workers_per_gather=11 -c checkpoint_completion_target=0.7010173081047282 -c random_page_cost=1.2381504213283598 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 45] TPS: 7535.44 | Latency Avg: 8.49 ms
+[32m[I 2026-05-06 17:40:16,205][0m Trial 45 finished with value: 7535.44143 and parameters: {'shared_buffers': '2GB', 'work_mem': 28, 'maintenance_work_mem': 1024, 'max_parallel_workers_per_gather': 11, 'checkpoint_completion_target': 0.7010173081047282, 'random_page_cost': 1.2381504213283598, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 46] Config: {'shared_buffers': '2GB', 'work_mem': '12MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': '0.8764581065501923', 'random_page_cost': '1.2865268977244668', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=12MB -c maintenance_work_mem=128MB -c max_parallel_workers_per_gather=7 -c checkpoint_completion_target=0.8764581065501923 -c random_page_cost=1.2865268977244668 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 46] TPS: 7127.29 | Latency Avg: 8.98 ms
+[32m[I 2026-05-06 17:41:32,266][0m Trial 46 finished with value: 7127.285844 and parameters: {'shared_buffers': '2GB', 'work_mem': 12, 'maintenance_work_mem': 128, 'max_parallel_workers_per_gather': 7, 'checkpoint_completion_target': 0.8764581065501923, 'random_page_cost': 1.2865268977244668, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 47] Config: {'shared_buffers': '4GB', 'work_mem': '16MB', 'maintenance_work_mem': '256MB', 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': '0.9348172936723852', 'random_page_cost': '1.2545447827095901', 'effective_cache_size': '20MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c work_mem=16MB -c maintenance_work_mem=256MB -c max_parallel_workers_per_gather=13 -c checkpoint_completion_target=0.9348172936723852 -c random_page_cost=1.2545447827095901 -c effective_cache_size=20MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 47] TPS: 7456.67 | Latency Avg: 8.58 ms
+[32m[I 2026-05-06 17:42:48,461][0m Trial 47 finished with value: 7456.674547 and parameters: {'shared_buffers': '4GB', 'work_mem': 16, 'maintenance_work_mem': 256, 'max_parallel_workers_per_gather': 13, 'checkpoint_completion_target': 0.9348172936723852, 'random_page_cost': 1.2545447827095901, 'effective_cache_size': 20}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 48] Config: {'shared_buffers': '2GB', 'work_mem': '16MB', 'maintenance_work_mem': '512MB', 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': '0.9036278353985625', 'random_page_cost': '1.1291620582511002', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=16MB -c maintenance_work_mem=512MB -c max_parallel_workers_per_gather=3 -c checkpoint_completion_target=0.9036278353985625 -c random_page_cost=1.1291620582511002 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 48] TPS: 7020.34 | Latency Avg: 9.12 ms
+[32m[I 2026-05-06 17:44:04,761][0m Trial 48 finished with value: 7020.339946 and parameters: {'shared_buffers': '2GB', 'work_mem': 16, 'maintenance_work_mem': 512, 'max_parallel_workers_per_gather': 3, 'checkpoint_completion_target': 0.9036278353985625, 'random_page_cost': 1.1291620582511002, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+========================================
+[Trial 49] Config: {'shared_buffers': '2GB', 'work_mem': '4MB', 'maintenance_work_mem': '320MB', 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': '0.7757287378873985', 'random_page_cost': '1.2697814357453834', 'effective_cache_size': '24MB'}
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
+[CMD] docker run -d --name tuning -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c work_mem=4MB -c maintenance_work_mem=320MB -c max_parallel_workers_per_gather=0 -c checkpoint_completion_target=0.7757287378873985 -c random_page_cost=1.2697814357453834 -c effective_cache_size=24MB
+[DB] Waiting for PostgreSQL to be ready...
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[CMD] docker exec tuning pg_isready -U postgres -h 127.0.0.1
+[DB] PostgreSQL is ready.
+[TEST] Running pgbench (warmup)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 32 -j 2 -T 10 benchdb
+[TEST] Running pgbench (test)...
+[CMD] docker exec tuning pgbench -U postgres -h 127.0.0.1 -c 64 -j 2 -T 60 benchdb
+[Trial 49] TPS: 7816.39 | Latency Avg: 8.19 ms
+[32m[I 2026-05-06 17:45:20,916][0m Trial 49 finished with value: 7816.385671 and parameters: {'shared_buffers': '2GB', 'work_mem': 4, 'maintenance_work_mem': 320, 'max_parallel_workers_per_gather': 0, 'checkpoint_completion_target': 0.7757287378873985, 'random_page_cost': 1.2697814357453834, 'effective_cache_size': 24}. Best is trial 31 with value: 8317.538324.[0m
+
+==================================================
+✅ ОПТИМИЗАЦИЯ ЗАВЕРШЕНА
+📊 Лучшая конфигурация (Trial 31):
+   shared_buffers = 2GB
+   work_mem = 16
+   maintenance_work_mem = 192
+   max_parallel_workers_per_gather = 7
+   checkpoint_completion_target = 0.8917684785074206
+   random_page_cost = 1.1711799119509012
+   effective_cache_size = 24
+🏆 tps: 8317.54
+📁 Результаты сохранены в: results.csv
+
+📋 🔼 ТОП-5 по максимизации 'tps':
+|   trial | shared_buffers   | work_mem   | maintenance_work_mem   |   max_parallel_workers_per_gather |   checkpoint_completion_target |   random_page_cost | effective_cache_size   |     tps |   latency average |   number of transactions actually processed |   number of failed transactions |
+|--------:|:-----------------|:-----------|:-----------------------|----------------------------------:|-------------------------------:|-------------------:|:-----------------------|--------:|------------------:|--------------------------------------------:|--------------------------------:|
+|      31 | 2GB              | 16MB       | 192MB                  |                                 7 |                           0.89 |               1.17 | 24MB                   | 8317.54 |              7.7  |                                      498679 |                               0 |
+|      13 | 8GB              | 12MB       | 320MB                  |                                 7 |                           0.89 |               1.23 | 24MB                   | 8285.75 |              7.72 |                                      496759 |                               0 |
+|      27 | 2GB              | 8MB        | 832MB                  |                                 7 |                           0.86 |               1.28 | 16MB                   | 8262.03 |              7.75 |                                      495250 |                               0 |
+|      22 | 2GB              | 52MB       | 576MB                  |                                 2 |                           0.95 |               1.24 | 24MB                   | 8255.87 |              7.75 |                                      495092 |                               0 |
+|      33 | 2GB              | 24MB       | 192MB                  |                                 3 |                           0.88 |               1.26 | 24MB                   | 8231.97 |              7.78 |                                      493424 |                               0 |
+
+📈 Статистика по 'tps':
+   Min: 3615.33 | Max: 8317.54 | Mean: 7148.68 | Std: 922.60
+
+🎯 Важность гиперпараметров (оценка влияния на 'tps'):
+Параметр                                   Важность Визуализация
+----------------------------------------------------------------------
+work_mem                                  25.66%  ████████████
+checkpoint_completion_target              24.95%  ████████████
+max_parallel_workers_per_gather           13.58%  ██████
+effective_cache_size                      11.79%  █████
+random_page_cost                          11.45%  █████
+maintenance_work_mem                       8.49%  ████
+shared_buffers                             4.09%  ██
+
+💡 Параметр 'work_mem' наиболее сильно влияет на tps.
+[CLEANUP] Stopping container...
+[CMD] docker stop tuning || true
+[CMD] docker rm tuning || true
