@@ -168,19 +168,37 @@ class PostgresConfigOptimizer:
             timeout=120)
 
     def _run_pgbench(self, phase: str) -> Dict[str, float]:
+        """Запуск pgbench с логированием прогресса TPS"""
         cfg_phase = self.cfg[phase]
+        progress_sec = cfg_phase.get("progress_sec", 0)
+
         cmd_parts = [
             f"docker exec -e PGPASSWORD={self.cfg['db_password']} {self.cfg['client_container_name']}",
             f"pgbench -U {self.cfg['db_user']} -h {self.cfg['db_container_name']}",
             f"-c {cfg_phase['clients']} -j {cfg_phase['threads']}",
             f"-T {cfg_phase['time_sec']}"
         ]
+        # Добавляем флаг прогресса, если задан > 0
+        if progress_sec and progress_sec > 0:
+            cmd_parts.append(f"-P {progress_sec}")
+
         if cfg_phase['command'] != "default":
             cmd_parts.append(cfg_phase['command'])
         cmd_parts.append(self.cfg['db_name'])
 
         logging.info("[TEST] Running pgbench (%s) from client container...", phase)
         res = self._run(" ".join(cmd_parts), timeout=cfg_phase['time_sec'] + 60)
+
+        # Логирование промежуточных метрик из stderr
+        if res.stderr:
+            for line in res.stderr.splitlines():
+                line = line.strip()
+                if line.startswith("progress:"):
+                    logging.info("[PG_PROGRESS] %s", line)
+                    # Опционально: можно извлечь только TPS для машинного парсинга
+                    # tps_match = re.search(r'(\d+\.\d+)\s*tps', line)
+                    # if tps_match: logging.info("[PG_PROGRESS_TPS] %.2f", float(tps_match.group(1)))
+
         if phase == "test":
             return self._parse_pgbench_output(res.stdout, self.cfg['checked_params'])
         return {}

@@ -19,11 +19,13 @@ pgbench:
     clients: 32
     threads: 2
     time_sec: 120
+    progress_sec: 30
     command: "default"
   test:
     clients: 64
     threads: 2
     time_sec: 600
+    progress_sec: 60
     command: "default"
   checked_params:
     - "tps"
