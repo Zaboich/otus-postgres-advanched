@@ -1,7 +1,7 @@
 # config.yaml
 docker:
   image: "postgres:18-alpine"
-  memory: "32G"
+  memory: "12G"
   cpu: 8
   network: "pg_tuner_net"
   db_container: "pg_db"
@@ -12,18 +12,18 @@ database:
   name: "benchdb"
   user: "postgres"
   password: "password_test"
-  pgbench_scale: 100  # ~1.6 ГБ
+  pgbench_scale: 10000  # ~160 ГБ
 
 pgbench:
   warmup:
     clients: 32
     threads: 2
-    time_sec: 5
+    time_sec: 120
     command: "default"
   test:
     clients: 64
     threads: 2
-    time_sec: 10
+    time_sec: 600
     command: "default"
   checked_params:
     - "tps"
@@ -33,36 +33,35 @@ pgbench:
 
 optimization:
   target: "tps"  # "tps" или "latency average"
-  n_trials: 5
+  n_trials: 50
   tunable_params:
     shared_buffers:
       type: "categorical"
-      values: ["2GB", "4GB", "8GB"]
+      values: ["2GB", "6GB", "10GB"]
     work_mem:
       type: "int"
       low: 4
       high: 64
-      step: 4
+      step: 15
     maintenance_work_mem:
-      type: "int"
-      low: 64
-      high: 1024
-      step: 64
+      type: "categorical"
+      values: [ "128MB", "512MB", "1GB" ]
     max_parallel_workers_per_gather:
       type: "categorical"
-      values: [0, 1, 2, 3, 5, 7, 9, 11, 13]
+      values: [0, 1, 2, 3, 7]
     random_page_cost:
       type: "float"
       low: 1.0
       high: 4.0
+      step: 1
     effective_cache_size:
       type: "int"
       low: 2048
-      high: 24576
+      high: 10240
       step: 2048
     wal_buffers:
       type: "categorical"
-      values: ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]
+      values: [ "32MB", "128MB", "512MB", "1GB"]
     max_wal_size:
       type: "int"
       low: 1024
