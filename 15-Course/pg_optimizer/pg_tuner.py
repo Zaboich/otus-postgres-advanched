@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # автоматизация процесса выбора оптимальных конфигурационных настроек
 """
-PostgreSQL Config Optimizer v1
-Развёртывание: Local Docker
+PostgreSQL Config Optimizer v1.6
+Развёртывание: Local Docker (разделённые клиент/сервер)
 Оптимизатор: Optuna (TPE / Bayesian Optimization)
-Тестирование: pgbench (Read/Write/Insert mix)
+Тестирование: pgbench + сбор внутренних метрик PG
 """
-
 import subprocess
 import time
 import re
 import csv
 import os
+import json
 import signal
 import optuna
 import pandas as pd
@@ -24,23 +24,27 @@ import matplotlib.pyplot as plt
 # 🔧 КОНФИГУРАЦИЯ СИСТЕМЫ
 # ==============================================================================
 CONFIG = {
-    # Docker / БД
+    # Docker / Сеть
     "docker_image": "postgres:18-alpine",
+    "docker_network": "pg_tuner_net",
     "container_memory": "32G",
     "container_cpu": 8,
-    "container_name": "tuning",
+    "db_container_name": "pg_db",
+    "client_container_name": "pg_client",
+
+    # БД
     "db_name": "benchdb",
     "db_user": "postgres",
     "db_password": "password_test",
     "volume_name": "pg_bench",
-    "pgbench_scale": 100,  # 100 -> ~1.6 ГБ при стандартной схеме pgbench
+    "pgbench_scale": 100,  # ~1.6 ГБ при стандартной схеме pgbench
 
     # Параметры pgbench
     "warmup": {
         "clients": 32,
         "threads": 2,
         "time_sec": 10,
-        "command": "default"  # или путь к .sql файлу: "-f /path/to/custom.sql"
+        "command": "default"
     },
     "test": {
         "clients": 64,
@@ -52,20 +56,17 @@ CONFIG = {
     # Пространство параметров для оптимизации
     "tunable_params": {
         "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB"]},
-        "work_mem": {"type": "int", "low": 4, "high": 128, "step": 4},  # MB
-        "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},  # MB
+        "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},
+        "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},
         "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7,9,11,13]},
         "random_page_cost": {"type": "float", "low": 1.0, "high": 4.0},
-        "effective_cache_size": {"type": "int", "low": 2048, "high": 24576, "step": 2048},  # MB
+        "effective_cache_size": {"type": "int", "low": 2048, "high": 24576, "step": 2048},
         "wal_buffers": {"type": "categorical", "values": ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]},
         "max_wal_size": {"type": "int", "low": 1024, "high": 4096, "step": 1024},
-        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.95},
-        "random_page_cost": {"type": "float", "low": 1.0, "high": 1.3},
-        "effective_cache_size": {"type": "int", "low": 128, "high": 4096, "step": 128}  # MB
     },
 
     # Оптимизация
-    "checked_params":["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
+    "checked_params": ["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
     "optimization_target": "tps",  # "tps" (максимизировать) или "latency average" (минимизировать)
     "n_trials": 20,
     "results_file": "results.csv"
@@ -85,29 +86,48 @@ class PostgresConfigOptimizer:
         return subprocess.run(cmd, shell=True, check=check, capture_output=True, text=True, timeout=timeout)
 
     def _cleanup(self):
-        """Остановка и удаление контейнера"""
-        print("[CLEANUP] Stopping container...")
-        self._run(f"docker stop {self.cfg['container_name']} || true", check=False)
-        self._run(f"docker rm {self.cfg['container_name']} || true", check=False)
+        """Остановка и удаление обоих контейнеров"""
+        print("[CLEANUP] Stopping containers & network...")
+        for cname in [self.cfg['client_container_name'], self.cfg['db_container_name']]:
+            self._run(f"docker stop {cname} || true", check=False)
+            self._run(f"docker rm {cname} || true", check=False)
 
-    def _start_container(self, params: Dict[str, str]):
-        """Запуск Docker-контейнера с переданными параметрами конфигурации"""
+    def _create_network(self):
+        """Создание изолированной Docker-сети"""
+        self._run(f"docker network create {self.cfg['docker_network']} || true")
+
+    def _remove_network(self):
+        """Удаление сети после завершения"""
+        self._run(f"docker network rm {self.cfg['docker_network']} || true")
+
+    def _start_db_container(self, params: Dict[str, str]):
+        """Запуск PostgreSQL в выделенном контейнере"""
         self._cleanup()
         flags = " ".join([f"-c {k}={v}" for k, v in params.items()])
         cmd = (
-            f"docker run -d --name {self.cfg['container_name']} --memory {self.cfg['container_memory']} --cpus {self.cfg['container_cpu']} "
+            f"docker run -d --name {self.cfg['db_container_name']} --network {self.cfg['docker_network']} "
+            f"--memory {self.cfg['container_memory']} --cpus {self.cfg['container_cpu']} "
             f"-u {self.cfg['db_user']} "
-            f"-e POSTGRES_PASSWORD={self.cfg['db_password']} "
-            f"-e POSTGRES_USER={self.cfg['db_user']} "
+            f"-e POSTGRES_PASSWORD={self.cfg['db_password']} -e POSTGRES_USER={self.cfg['db_user']} "
             f"-p 5432:5432 -v {self.cfg['volume_name']}:/var/lib/postgresql/data "
             f"{self.cfg['docker_image']} {flags}"
         )
         self._run(cmd)
 
+    def _start_client_container(self):
+        """Запуск легковесного клиентского контейнера (pgbench)"""
+        cmd = (
+            f"docker run -d --name {self.cfg['client_container_name']} --network {self.cfg['docker_network']} "
+            f"--memory 2G --cpus 2 "
+            f"{self.cfg['docker_image']} tail -f /dev/null"
+        )
+        self._run(cmd)
+        time.sleep(2)  # Ожидание инициализации сети/DNS
+
     def _wait_ready(self, timeout: int = 60):
         """Ожидание готовности PostgreSQL"""
         print("[DB] Waiting for PostgreSQL to be ready...")
-        cmd = f"docker exec {self.cfg['container_name']} pg_isready -U {self.cfg['db_user']} -h 127.0.0.1"
+        cmd = f"docker exec {self.cfg['db_container_name']} pg_isready -U {self.cfg['db_user']} -h 127.0.0.1"
         start = time.time()
         while time.time() - start < timeout:
             res = self._run(cmd, check=False, timeout=5)
@@ -122,19 +142,18 @@ class PostgresConfigOptimizer:
         """Создание БД и инициализация pgbench (выполняется 1 раз)"""
         print(f"[DB] Initializing pgbench with scale={self.cfg['pgbench_scale']}...")
         cmd = (
-            f"docker exec {self.cfg['container_name']} bash -c "
+            f"docker exec {self.cfg['db_container_name']} bash -c "
             f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs {self.cfg['pgbench_scale']} {self.cfg['db_name']}'"
         )
         self._run(cmd, timeout=600)
-        # Анализ после создания
-        self._run(f"docker exec {self.cfg['container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'ANALYZE;'", timeout=120)
+        self._run(f"docker exec {self.cfg['db_container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'ANALYZE;'", timeout=120)
 
     def _run_pgbench(self, phase: str) -> Dict[str, float]:
-        """Запуск pgbench (warmup или test) и возврат метрик"""
         cfg_phase = self.cfg[phase]
+        # 🌐 Подключение к БД через Docker DNS-имя
         cmd_parts = [
-            f"docker exec {self.cfg['container_name']}",
-            f"pgbench -U {self.cfg['db_user']} -h 127.0.0.1",
+            f"docker exec  -e PGPASSWORD={self.cfg['db_password']}  {self.cfg['client_container_name']}",
+            f"pgbench -U {self.cfg['db_user']} -h {self.cfg['db_container_name']}",
             f"-c {cfg_phase['clients']} -j {cfg_phase['threads']}",
             f"-T {cfg_phase['time_sec']}"
         ]
@@ -142,16 +161,39 @@ class PostgresConfigOptimizer:
             cmd_parts.append(cfg_phase['command'])
         cmd_parts.append(self.cfg['db_name'])
 
-        print(f"[TEST] Running pgbench ({phase})...")
+        print(f"[TEST] Running pgbench ({phase}) from client container...")
         res = self._run(" ".join(cmd_parts), timeout=cfg_phase['time_sec'] + 60)
-
         if phase == "test":
             return self._parse_pgbench_output(res.stdout, self.cfg['checked_params'])
         return {}
 
+    def _collect_pg_metrics(self) -> Dict[str, float]:
+        query = f"""
+        SELECT json_build_object(
+            'checkpoints_req', b.checkpoints_req,
+            'buffers_checkpoint', b.buffers_checkpoint,
+            'buffers_backend', b.buffers_backend,
+            'deadlocks', d.deadlocks,
+            'temp_bytes', d.temp_bytes,
+            'blk_read_time', d.blk_read_time,
+            'blk_write_time', d.blk_write_time
+        ) FROM pg_stat_bgwriter b, pg_stat_database d WHERE d.datname = '{self.cfg['db_name']}';
+        """
+        cmd = (
+            f"docker exec {self.cfg['db_container_name']} "
+            f"psql -q -U {self.cfg['db_user']} -d {self.cfg['db_name']} "
+            f"-t -A -c \"{query}\""
+        )
+        try:
+            res = self._run(cmd, timeout=30)
+            data = json.loads(res.stdout.strip())
+            return {k: float(v) if v is not None else 0.0 for k, v in data.items()}
+        except Exception as e:
+            print(f"[WARN] Сбор PG-метрик пропущен: {e}")
+            return {}
+
     @staticmethod
-    def _parse_pgbench_output(output: str, checked_params:list[str]=None) -> Dict[str, float]:
-        """Парсинг stdout pgbench"""
+    def _parse_pgbench_output(output: str, checked_params: list[str] = None) -> Dict[str, float]:
         if checked_params is None:
             checked_params = ["tps"]
         results = {}
@@ -159,50 +201,41 @@ class PostgresConfigOptimizer:
             match = re.search(rf'{metric}\s*[=:]\s*([\d.]+)\s*', output)
             results[metric] = float(match.group(1)) if match else None
         return results
-        # tps_match = re.search(r'tps\s*=\s*([\d.]+)\s*\(excluding', output)
-        # lat_match = re.search(r'latency average\s*:\s*([\d.]+)', output)
-        # tps_95_match = re.search(r'latency 95th percentile\s*:\s*([\d.]+)', output)
-        #
-        # return {
-        #     "tps_excl": float(tps_match.group(1)) if tps_match else 0.0,
-        #     "latency_avg_ms": float(lat_match.group(1)) if lat_match else 0.0,
-        #     "latency_95th_ms": float(tps_95_match.group(1)) if tps_95_match else 0.0
-        # }
 
     def objective(self, trial: optuna.Trial) -> float:
-        """Целевая функция для Optuna"""
-        # 1. Сэмплирование параметров
         params = {}
         for name, spec in self.cfg["tunable_params"].items():
             if spec["type"] == "categorical":
                 params[name] = trial.suggest_categorical(name, spec["values"])
             elif spec["type"] == "int":
-                params[name] = str(trial.suggest_int(name, spec["low"], spec["high"], step=spec.get("step", 1))) + "MB"
+                params[name] = str(trial.suggest_int(name=name, low=spec["low"], high=spec["high"], step=spec.get("step", 1))) + "MB"
             elif spec["type"] == "float":
-                params[name] = str(trial.suggest_float(name, spec["low"], spec["high"]))
+                params[name] = str(trial.suggest_float(name=name, low=spec["low"], high=spec["high"]))
 
-        # 2. Развёртывание с новой конфигурацией
         print(f"\n{'='*40}\n[Trial {trial.number}] Config: {params}")
-        self._start_container(params)
+        self._start_db_container(params)
+        self._start_client_container()  # Запуск отдельного клиента
         self._wait_ready()
 
-        # 3. Прогрев
         self._run_pgbench("warmup")
-
-        # 4. Тест
         metrics = self._run_pgbench("test")
+        pg_metrics = self._collect_pg_metrics()
 
-        # 5. Сохранение результатов
-        row = {"trial": trial.number, **params, **metrics}
+        row = {"trial": trial.number, **params, **metrics, **pg_metrics}
         file_exists = os.path.exists(self.cfg["results_file"])
         with open(self.cfg["results_file"], "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
+            writer = csv.DictWriter(f, fieldnames=sorted(row.keys()))
             if not file_exists:
                 writer.writeheader()
             writer.writerow(row)
 
-        print(f"[Trial {trial.number}] TPS: {metrics['tps']:.2f} | Latency Avg: {metrics['latency average']:.2f} ms")
-        return metrics[self.cfg["optimization_target"]]
+        target_val = metrics[self.cfg["optimization_target"]]
+        if target_val is None:
+            print(f"[Trial {trial.number}] Пропущен (метрика '{self.cfg['optimization_target']}' не найдена)")
+            raise optuna.TrialPruned()
+
+        print(f"[Trial {trial.number}] {self.cfg['optimization_target']}: {target_val:.2f} | PG Checkpoints Req: {pg_metrics.get('checkpoints_req', 0):.0f}")
+        return target_val
 
     def get_direction_optimize(self):
         return "maximize" if self.cfg["optimization_target"] in ["tps", "number of transactions actually processed"] else "minimize"
@@ -211,34 +244,28 @@ class PostgresConfigOptimizer:
         return self.get_direction_optimize() != 'maximize'
 
     def run_test(self):
-        """Запуск оптимизации"""
-        # Подготовка
         self._cleanup_on_exit = True
         signal.signal(signal.SIGINT, lambda s, f: self._exit_handler())
         signal.signal(signal.SIGTERM, lambda s, f: self._exit_handler())
 
         print("Параметры поиска оптимальной конфигурации: ", self.cfg)
-
-        # Создание volume (если нет)
         self._run(f"docker volume create {self.cfg['volume_name']} || true")
+        self._create_network()
 
-        # Запуск контейнера для инициализации БД
-        print("[INIT] Starting container for DB initialization...")
-        self._start_container({})
+        print("[INIT] Starting DB for initialization...")
+        self._start_db_container({})
+        self._start_client_container()
         self._wait_ready()
         self._init_db()
         self._cleanup()
-
 
         target_col = self.cfg["optimization_target"]
         direction = self.get_direction_optimize()
         tunable_names = list(self.cfg["tunable_params"].keys())
 
-        # Оптимизация
         study = optuna.create_study(direction=direction, sampler=optuna.samplers.TPESampler(seed=42))
         study.optimize(self.objective, n_trials=self.cfg["n_trials"], show_progress_bar=True)
 
-        # Итоги
         print("\n" + "="*50)
         print("✅ ОПТИМИЗАЦИЯ ЗАВЕРШЕНА")
         print(f"Лучшая конфигурация (Trial {study.best_trial.number}):")
@@ -247,81 +274,59 @@ class PostgresConfigOptimizer:
         print(f"🏆 {self.cfg['optimization_target']}: {study.best_value:.2f}")
         print(f"📁 Результаты сохранены в: {self.cfg['results_file']}")
 
-        # 🔥 Вывод отсортированной таблицы результатов
         df = pd.read_csv(self.cfg["results_file"])
-
-        # Сортировка по целевой метрике
-
         df_sorted = df.sort_values(by=target_col, ascending=self.is_sort_asc()).head(5)
         sort_label = f"TOP-5 by {direction}"
-
         print(f"{sort_label} '{target_col}':")
-        # Форматируем числовые колонки для читаемости
+
         numeric_cols = df_sorted.select_dtypes(include='number').columns
         display_df = df_sorted.copy()
         for col in numeric_cols:
-            if col != "trial":  # trial оставляем как int
+            if col != "trial":
                 display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "N/A")
         print(display_df.to_markdown(index=False))
 
-        # Дополнительно: статистика по целевой метрике
-        print(f"Статистика по '{target_col}':")
+        print(f"\nСтатистика по '{target_col}':")
         print(f"Min: {df[target_col].min():.2f} | Max: {df[target_col].max():.2f} | Mean: {df[target_col].mean():.2f} | Std: {df[target_col].std():.2f}")
 
-        # 🔥 Вывод важности гиперпараметров
-        print(f"Важность гиперпараметров (оценка влияния на '{target_col}'):")
+        print(f"\n🎯 Важность гиперпараметров (оценка влияния на '{target_col}'):")
         try:
-            # Вычисляем важности только для tunable_params
             importances = get_param_importances(
-                study,
-                evaluator=FanovaImportanceEvaluator(seed=42),
+                study, evaluator=FanovaImportanceEvaluator(seed=42),
                 params=tunable_names,
-                target=lambda t: t.value if direction == "maximize" else -t.value  # корректная обработка направления
+                target=lambda t: t.value if direction == "maximize" else -t.value
             )
-
-            # Сортируем и форматируем
             importances_sorted = dict(sorted(importances.items(), key=lambda x: x[1], reverse=True))
-
             print(f"{'Параметр':<40} {'Важность':>10} {'Визуализация'}")
             print("-" * 70)
             for param, imp in importances_sorted.items():
-                bar_len = int(imp * 50)  # шкала до 50 символов
+                bar_len = int(imp * 50)
                 bar = "█" * bar_len
                 print(f"{param:<40} {imp*100:6.2f}%  {bar}")
-
-            # Подсказка по интерпретации
             top_param = next(iter(importances_sorted))
             print(f"\n💡 Параметр '{top_param}' наиболее сильно влияет на {target_col}.")
-
         except Exception as e:
             print(f"Не удалось рассчитать важности: {e}")
-            print("Убедитесь, что выполнено >= 10 успешных испытаний.")
 
-        # Опционально: график (требуется matplotlib)
         try:
             optuna.visualization.matplotlib.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(), params=tunable_names)
             plt.savefig("importances.png", dpi=300, bbox_inches="tight")
-            print("График сохранён: importances.png")
+            print("📊 График сохранён: importances.png")
         except ImportError:
             pass
 
         self._cleanup()
+        self._remove_network()
         self._cleanup_on_exit = False
 
     def _exit_handler(self):
         print("\n[INTERRUPT] Завершение работы...")
         if self._cleanup_on_exit:
             self._cleanup()
+            self._remove_network()
         exit(1)
 
 # ==============================================================================
 if __name__ == "__main__":
-    # Примечание: Для work_mem в Docker -c указывается без суффикса MB/GB в некоторых версиях,
-    # но PG16 поддерживает суффиксы. В коде выше добавлен "MB" для int-параметров.
-    # shared_buffers и effective_cache_size требуют суффиксов GB/MB.
-
-    # Корректировка формата значений перед передачей в Docker (PG требует суффиксы для размеров)
-    # В objective() это уже учтено, но для categorical значений нужно убедиться в суффиксах.
-
     tuner = PostgresConfigOptimizer(CONFIG)
     tuner.run_test()
