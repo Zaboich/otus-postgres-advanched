@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # автоматизация процесса выбора оптимальных конфигурационных настроек
 """
-PostgreSQL Config Optimizer v1.6
+PostgreSQL Config Optimizer v1.6.2
 Развёртывание: Local Docker (разделённые клиент/сервер)
 Оптимизатор: Optuna (TPE / Bayesian Optimization)
 Тестирование: pgbench + сбор внутренних метрик PG
@@ -19,58 +19,67 @@ from typing import Dict, Any, List
 from pathlib import Path
 from optuna.importance import FanovaImportanceEvaluator, get_param_importances
 import matplotlib.pyplot as plt
+import datetime
+import logging
+import yaml
 
-# ==============================================================================
-# 🔧 КОНФИГУРАЦИЯ СИСТЕМЫ
-# ==============================================================================
-CONFIG = {
-    # Docker / Сеть
-    "docker_image": "postgres:18-alpine",
-    "docker_network": "pg_tuner_net",
-    "container_memory": "32G",
-    "container_cpu": 8,
-    "db_container_name": "pg_db",
-    "client_container_name": "pg_client",
 
-    # БД
-    "db_name": "benchdb",
-    "db_user": "postgres",
-    "db_password": "password_test",
-    "volume_name": "pg_bench",
-    "pgbench_scale": 100,  # ~1.6 ГБ при стандартной схеме pgbench
+def load_and_setup_config(config_path: str = "config.yaml") -> dict:
+    """Загружает YAML-конфиг, создаёт уникальные файлы логов/результатов, логирует параметры."""
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Файл конфигурации не найден: {config_path}")
 
-    # Параметры pgbench
-    "warmup": {
-        "clients": 32,
-        "threads": 2,
-        "time_sec": 10,
-        "command": "default"
-    },
-    "test": {
-        "clients": 64,
-        "threads": 2,
-        "time_sec": 20,
-        "command": "default"
-    },
+    with open(config_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
 
-    # Пространство параметров для оптимизации
-    "tunable_params": {
-        "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB"]},
-        "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},
-        "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},
-        "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7,9,11,13]},
-        "random_page_cost": {"type": "float", "low": 1.0, "high": 4.0},
-        "effective_cache_size": {"type": "int", "low": 2048, "high": 24576, "step": 2048},
-        "wal_buffers": {"type": "categorical", "values": ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]},
-        "max_wal_size": {"type": "int", "low": 1024, "high": 4096, "step": 1024},
-    },
+    # 🔹 Генерация уникального ID запуска
+    run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    cfg["run_id"] = run_id
 
-    # Оптимизация
-    "checked_params": ["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
-    "optimization_target": "tps",  # "tps" (максимизировать) или "latency average" (минимизировать)
-    "n_trials": 20,
-    "results_file": "results.csv"
-}
+    # 🔹 Уникальные пути для артефактов
+    os.makedirs("logs", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
+
+    cfg["log_file"] = f"logs/pg_tuner_{run_id}.log"
+    cfg["results_file"] = f"results/pg_tuner_results_{run_id}.csv"
+
+    # 🔹 Настройка логирования (stdout + уникальный файл)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler(cfg["log_file"], encoding="utf-8"),
+            logging.StreamHandler()
+        ]
+    )
+
+    # 🔹 Сохранение точной конфигурации в лог (требование №1)
+    logging.info("🚀 Запуск оптимизации (ID: %s)", run_id)
+    logging.info("📄 Используемая конфигурация:\n%s", json.dumps(cfg, indent=2, default=str))
+
+    # Преобразуем структуру в плоский вид, совместимый с текущим классом
+    return {
+        "docker_image": cfg["docker"]["image"],
+        "docker_network": cfg["docker"]["network"],
+        "container_memory": cfg["docker"]["memory"],
+        "container_cpu": cfg["docker"]["cpu"],
+        "db_container_name": cfg["docker"]["db_container"],
+        "client_container_name": cfg["docker"]["client_container"],
+        "volume_name": cfg["docker"]["volume"],
+        "db_name": cfg["database"]["name"],
+        "db_user": cfg["database"]["user"],
+        "db_password": cfg["database"]["password"],
+        "pgbench_scale": cfg["database"]["pgbench_scale"],
+        "warmup": cfg["pgbench"]["warmup"],
+        "test": cfg["pgbench"]["test"],
+        "checked_params": cfg["pgbench"]["checked_params"],
+        "tunable_params": cfg["optimization"]["tunable_params"],
+        "optimization_target": cfg["optimization"]["target"],
+        "n_trials": cfg["optimization"]["n_trials"],
+        "results_file": cfg["results_file"],
+        "log_file": cfg["log_file"],
+        "run_id": run_id
+    }
 
 # ==============================================================================
 # 🤖 КЛАСС ОПТИМИЗАТОРА
@@ -328,5 +337,15 @@ class PostgresConfigOptimizer:
 
 # ==============================================================================
 if __name__ == "__main__":
+    # Загрузка внешней конфигурации + настройка уникальных файлов
+    CONFIG = load_and_setup_config("config.yaml")
+
+    # Опционально: вывод в консоль перед стартом
+    print(f"\n{'=' * 50}")
+    print(f"✅ Конфиг загружен из config.yaml")
+    print(f"Лог:      {CONFIG['log_file']}")
+    print(f"Результаты: {CONFIG['results_file']}")
+    print(f"{'=' * 50}\n")
+
     tuner = PostgresConfigOptimizer(CONFIG)
     tuner.run_test()

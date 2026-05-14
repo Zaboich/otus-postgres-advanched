@@ -1,0 +1,70 @@
+# config.yaml
+docker:
+  image: "postgres:18-alpine"
+  memory: "32G"
+  cpu: 8
+  network: "pg_tuner_net"
+  db_container: "pg_db"
+  client_container: "pg_client"
+  volume: "pg_bench"
+
+database:
+  name: "benchdb"
+  user: "postgres"
+  password: "password_test"
+  pgbench_scale: 100  # ~1.6 ГБ
+
+pgbench:
+  warmup:
+    clients: 32
+    threads: 2
+    time_sec: 5
+    command: "default"
+  test:
+    clients: 64
+    threads: 2
+    time_sec: 10
+    command: "default"
+  checked_params:
+    - "tps"
+    - "latency average"
+    - "number of transactions actually processed"
+    - "number of failed transactions"
+
+optimization:
+  target: "tps"  # "tps" или "latency average"
+  n_trials: 5
+  tunable_params:
+    shared_buffers:
+      type: "categorical"
+      values: ["2GB", "4GB", "8GB"]
+    work_mem:
+      type: "int"
+      low: 4
+      high: 64
+      step: 4
+    maintenance_work_mem:
+      type: "int"
+      low: 64
+      high: 1024
+      step: 64
+    max_parallel_workers_per_gather:
+      type: "categorical"
+      values: [0, 1, 2, 3, 5, 7, 9, 11, 13]
+    random_page_cost:
+      type: "float"
+      low: 1.0
+      high: 4.0
+    effective_cache_size:
+      type: "int"
+      low: 2048
+      high: 24576
+      step: 2048
+    wal_buffers:
+      type: "categorical"
+      values: ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]
+    max_wal_size:
+      type: "int"
+      low: 1024
+      high: 4096
+      step: 1024
