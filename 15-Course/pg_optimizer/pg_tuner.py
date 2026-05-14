@@ -18,6 +18,7 @@ import pandas as pd
 from typing import Dict, Any, List
 from pathlib import Path
 from optuna.importance import FanovaImportanceEvaluator, get_param_importances
+import matplotlib.pyplot as plt
 
 # ==============================================================================
 # 🔧 КОНФИГУРАЦИЯ СИСТЕМЫ
@@ -25,12 +26,14 @@ from optuna.importance import FanovaImportanceEvaluator, get_param_importances
 CONFIG = {
     # Docker / БД
     "docker_image": "postgres:18-alpine",
+    "container_memory": "32G",
+    "container_cpu": 8,
     "container_name": "tuning",
     "db_name": "benchdb",
     "db_user": "postgres",
     "db_password": "password_test",
     "volume_name": "pg_bench",
-    "pgbench_scale": 150,  # 100 -> ~1.6 ГБ при стандартной схеме pgbench
+    "pgbench_scale": 100,  # 100 -> ~1.6 ГБ при стандартной схеме pgbench
 
     # Параметры pgbench
     "warmup": {
@@ -42,7 +45,7 @@ CONFIG = {
     "test": {
         "clients": 64,
         "threads": 2,
-        "time_sec": 60,
+        "time_sec": 20,
         "command": "default"
     },
 
@@ -52,15 +55,16 @@ CONFIG = {
         "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},  # MB
         "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},  # MB
         "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7,9,11,13]},
-        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.95},
-        "random_page_cost": {"type": "float", "low": 1.0, "high": 1.3},
-        "effective_cache_size": {"type": "int", "low": 4, "high": 24, "step": 4}  # GB
+        "random_page_cost": {"type": "float", "low": 1.0, "high": 4.0},
+        "effective_cache_size": {"type": "int", "low": 2048, "high": 24576, "step": 2048},  # MB
+        "wal_buffers": {"type": "categorical", "values": ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]},
+        "max_wal_size": {"type": "int", "low": 1024, "high": 4096, "step": 1024},
     },
 
     # Оптимизация
     "checked_params":["tps", "latency average", "number of transactions actually processed", "number of failed transactions"],
     "optimization_target": "tps",  # "tps" (максимизировать) или "latency average" (минимизировать)
-    "n_trials": 50,
+    "n_trials": 20,
     "results_file": "results.csv"
 }
 
@@ -88,7 +92,7 @@ class PostgresConfigOptimizer:
         self._cleanup()
         flags = " ".join([f"-c {k}={v}" for k, v in params.items()])
         cmd = (
-            f"docker run -d --name {self.cfg['container_name']} "
+            f"docker run -d --name {self.cfg['container_name']} --memory {self.cfg['container_memory']} --cpus {self.cfg['container_cpu']} "
             f"-u {self.cfg['db_user']} "
             f"-e POSTGRES_PASSWORD={self.cfg['db_password']} "
             f"-e POSTGRES_USER={self.cfg['db_user']} "
@@ -197,12 +201,20 @@ class PostgresConfigOptimizer:
         print(f"[Trial {trial.number}] TPS: {metrics['tps']:.2f} | Latency Avg: {metrics['latency average']:.2f} ms")
         return metrics[self.cfg["optimization_target"]]
 
-    def run(self):
+    def get_direction_optimize(self):
+        return "maximize" if self.cfg["optimization_target"] in ["tps", "number of transactions actually processed"] else "minimize"
+
+    def is_sort_asc(self):
+        return self.get_direction_optimize() != 'maximize'
+
+    def run_test(self):
         """Запуск оптимизации"""
         # Подготовка
         self._cleanup_on_exit = True
         signal.signal(signal.SIGINT, lambda s, f: self._exit_handler())
         signal.signal(signal.SIGTERM, lambda s, f: self._exit_handler())
+
+        print("Параметры поиска оптимальной конфигурации: ", self.cfg)
 
         # Создание volume (если нет)
         self._run(f"docker volume create {self.cfg['volume_name']} || true")
@@ -214,15 +226,19 @@ class PostgresConfigOptimizer:
         self._init_db()
         self._cleanup()
 
+
+        target_col = self.cfg["optimization_target"]
+        direction = self.get_direction_optimize()
+        tunable_names = list(self.cfg["tunable_params"].keys())
+
         # Оптимизация
-        direction = "maximize" if self.cfg["optimization_target"] in ["tps", "number of transactions actually processed"] else "minimize"
         study = optuna.create_study(direction=direction, sampler=optuna.samplers.TPESampler(seed=42))
         study.optimize(self.objective, n_trials=self.cfg["n_trials"], show_progress_bar=True)
 
         # Итоги
         print("\n" + "="*50)
         print("✅ ОПТИМИЗАЦИЯ ЗАВЕРШЕНА")
-        print(f"📊 Лучшая конфигурация (Trial {study.best_trial.number}):")
+        print(f"Лучшая конфигурация (Trial {study.best_trial.number}):")
         for k, v in study.best_params.items():
             print(f"   {k} = {v}")
         print(f"🏆 {self.cfg['optimization_target']}: {study.best_value:.2f}")
@@ -232,17 +248,11 @@ class PostgresConfigOptimizer:
         df = pd.read_csv(self.cfg["results_file"])
 
         # Сортировка по целевой метрике
-        target_col = self.cfg["optimization_target"]
-        direction = "maximize" if target_col in ["tps", "number of transactions actually processed"] else "minimize"
 
-        if direction == "maximize":
-            df_sorted = df.sort_values(by=target_col, ascending=False).head(5)
-            sort_label = "🔼 ТОП-5 по максимизации"
-        else:
-            df_sorted = df.sort_values(by=target_col, ascending=True).head(5)
-            sort_label = "🔽 ТОП-5 по минимизации"
+        df_sorted = df.sort_values(by=target_col, ascending=self.is_sort_asc()).head(5)
+        sort_label = f"TOP-5 by {direction}"
 
-        print(f"\n📋 {sort_label} '{target_col}':")
+        print(f"{sort_label} '{target_col}':")
         # Форматируем числовые колонки для читаемости
         numeric_cols = df_sorted.select_dtypes(include='number').columns
         display_df = df_sorted.copy()
@@ -252,16 +262,13 @@ class PostgresConfigOptimizer:
         print(display_df.to_markdown(index=False))
 
         # Дополнительно: статистика по целевой метрике
-        print(f"\n📈 Статистика по '{target_col}':")
-        print(f"   Min: {df[target_col].min():.2f} | Max: {df[target_col].max():.2f} | Mean: {df[target_col].mean():.2f} | Std: {df[target_col].std():.2f}")
+        print(f"Статистика по '{target_col}':")
+        print(f"Min: {df[target_col].min():.2f} | Max: {df[target_col].max():.2f} | Mean: {df[target_col].mean():.2f} | Std: {df[target_col].std():.2f}")
 
         # 🔥 Вывод важности гиперпараметров
-        print(f"\n🎯 Важность гиперпараметров (оценка влияния на '{target_col}'):")
+        print(f"Важность гиперпараметров (оценка влияния на '{target_col}'):")
         try:
-
-
             # Вычисляем важности только для tunable_params
-            tunable_names = list(self.cfg["tunable_params"].keys())
             importances = get_param_importances(
                 study,
                 evaluator=FanovaImportanceEvaluator(seed=42),
@@ -284,8 +291,16 @@ class PostgresConfigOptimizer:
             print(f"\n💡 Параметр '{top_param}' наиболее сильно влияет на {target_col}.")
 
         except Exception as e:
-            print(f"⚠️ Не удалось рассчитать важности: {e}")
-            print("   Убедитесь, что выполнено >= 10 успешных испытаний.")
+            print(f"Не удалось рассчитать важности: {e}")
+            print("Убедитесь, что выполнено >= 10 успешных испытаний.")
+
+        # Опционально: график (требуется matplotlib)
+        try:
+            optuna.visualization.matplotlib.plot_param_importances(study, evaluator=FanovaImportanceEvaluator(), params=tunable_names)
+            plt.savefig("importances.png", dpi=300, bbox_inches="tight")
+            print("График сохранён: importances.png")
+        except ImportError:
+            pass
 
         self._cleanup()
         self._cleanup_on_exit = False
@@ -306,4 +321,4 @@ if __name__ == "__main__":
     # В objective() это уже учтено, но для categorical значений нужно убедиться в суффиксах.
 
     tuner = PostgresConfigOptimizer(CONFIG)
-    tuner.run()
+    tuner.run_test()
