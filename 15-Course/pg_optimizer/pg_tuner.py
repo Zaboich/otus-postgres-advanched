@@ -52,13 +52,16 @@ CONFIG = {
     # Пространство параметров для оптимизации
     "tunable_params": {
         "shared_buffers": {"type": "categorical", "values": ["2GB", "4GB", "8GB"]},
-        "work_mem": {"type": "int", "low": 4, "high": 64, "step": 4},  # MB
+        "work_mem": {"type": "int", "low": 4, "high": 128, "step": 4},  # MB
         "maintenance_work_mem": {"type": "int", "low": 64, "high": 1024, "step": 64},  # MB
         "max_parallel_workers_per_gather": {"type": "categorical", "values": [0,1,2,3,5,7,9,11,13]},
         "random_page_cost": {"type": "float", "low": 1.0, "high": 4.0},
         "effective_cache_size": {"type": "int", "low": 2048, "high": 24576, "step": 2048},  # MB
         "wal_buffers": {"type": "categorical", "values": ["8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB", "1GB"]},
         "max_wal_size": {"type": "int", "low": 1024, "high": 4096, "step": 1024},
+        "checkpoint_completion_target": {"type": "float", "low": 0.7, "high": 0.95},
+        "random_page_cost": {"type": "float", "low": 1.0, "high": 1.3},
+        "effective_cache_size": {"type": "int", "low": 128, "high": 4096, "step": 128}  # MB
     },
 
     # Оптимизация
