@@ -97,7 +97,7 @@ class PostgresConfigOptimizer:
         self.cfg = cfg
         self._cleanup_on_exit = False
 
-    def _run(self, cmd: str, check: bool = True, timeout: int = 300) -> subprocess.CompletedProcess:
+    def _run(self, cmd: str, check: bool = True, timeout: int = 1800) -> subprocess.CompletedProcess:
         """Обёртка над subprocess.run с логированием"""
         logging.info("[CMD] %s", cmd)
         return subprocess.run(cmd, shell=True, check=check, capture_output=True, text=True, timeout=timeout)
@@ -162,7 +162,7 @@ class PostgresConfigOptimizer:
             f"docker exec {self.cfg['db_container_name']} bash -c "
             f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs {self.cfg['pgbench_scale']} {self.cfg['db_name']}'"
         )
-        self._run(cmd, timeout=600)
+        self._run(cmd, timeout=12000)
         self._run(
             f"docker exec {self.cfg['db_container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'ANALYZE;'",
             timeout=120)
