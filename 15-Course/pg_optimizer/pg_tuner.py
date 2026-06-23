@@ -24,6 +24,7 @@ from typing import Dict, Any, List
 from pathlib import Path
 from optuna.importance import FanovaImportanceEvaluator, get_param_importances
 import matplotlib.pyplot as plt
+from pg_maitenance import PostgresMaintenance
 
 
 # ==============================================================================
@@ -56,6 +57,7 @@ def load_and_setup_config(config_path: str = "config.yaml") -> dict:
     os.makedirs("logs", exist_ok=True)
     os.makedirs("results", exist_ok=True)
 
+    cfg["cache_enabled"] = True
     cfg["log_file"] = f"logs/pg_tuner_{run_id}.log"
     cfg["results_file"] = f"results/pg_tuner_results_{run_id}.csv"
 
@@ -96,6 +98,44 @@ class PostgresConfigOptimizer:
     def __init__(self, cfg: Dict[str, Any]):
         self.cfg = cfg
         self._cleanup_on_exit = False
+
+    def _create_db_cache(self):
+        """Архивирует data-директорию после инициализации"""
+        logging.info("[CACHE] Creating cache of initialized DB...")
+        os.makedirs("cache", exist_ok=True)
+        cache_name = f"pg_bench_s{self.cfg['pgbench_scale']}.tar.gz"
+        cache_path = f"cache/{cache_name}"
+
+        # Останавливаем БД для консистентного снапшота
+        self._run(f"docker stop {self.cfg['db_container_name']}")
+
+        # Архивируем через временный контейнер (без root на хосте)
+        cmd = (
+            f"docker run --rm -v {self.cfg['volume_name']}:/pg_data "
+            f"-v {os.path.abspath('cache')}:/cache "
+            f"alpine tar czf /cache/{cache_name} -C /pg_data ."
+        )
+        self._run(cmd, timeout=600)
+
+        # Запускаем обратно
+        self._run(f"docker start {self.cfg['db_container_name']}")
+        logging.info("[CACHE] Cache saved: %s", cache_path)
+
+    def _restore_db_cache(self):
+        """Восстанавливает data-директорию из кэша перед trial"""
+        cache_name = f"pg_bench_s{self.cfg['pgbench_scale']}.tar.gz"
+        cache_path = f"cache/{cache_name}"
+        if not os.path.exists(cache_path):
+            raise FileNotFoundError(f"Cache not found: {cache_path}. Run with cache_enabled=false first.")
+
+        logging.info("[CACHE] Restoring DB from cache...")
+        # Очищаем volume и распаковываем + фиксируем права (UID 999 = postgres в оф. образе)
+        cmd = (
+            f"docker run --rm -v {self.cfg['volume_name']}:/pg_data "
+            f"-v {os.path.abspath('cache')}:/cache "
+            f"alpine sh -c 'rm -rf /pg_data/* && tar xzf /cache/{cache_name} -C /pg_data && chown -R 999:999 /pg_data'"
+        )
+        self._run(cmd, timeout=300)
 
     def _run(self, cmd: str, check: bool = True, timeout: int = 1800) -> subprocess.CompletedProcess:
         """Обёртка над subprocess.run с логированием"""
@@ -160,17 +200,33 @@ class PostgresConfigOptimizer:
         logging.info("[DB] Initializing pgbench with scale=%s...", self.cfg['pgbench_scale'])
         cmd = (
             f"docker exec {self.cfg['db_container_name']} bash -c "
-            f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs {self.cfg['pgbench_scale']} {self.cfg['db_name']}'"
+            f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs {self.cfg['db_name']}'"
         )
         self._run(cmd, timeout=12000)
         self._run(
             f"docker exec {self.cfg['db_container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'ANALYZE;'",
             timeout=120)
 
+    def _pg_vacuum(self):
+        logging.info("[DB] Waiting for PostgreSQL to be VACUUM ANALYZE")
+        self._run(
+            f"docker exec {self.cfg['db_container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'VACUUM ANALYZE;'",
+            timeout=3600)
+
+    def _pg_checkpoint(self):
+        logging.info("[DB] PostgreSQL CHECKPOINT")
+        self._run(
+            f"docker exec {self.cfg['db_container_name']} psql -U {self.cfg['db_user']} -d {self.cfg['db_name']} -c 'CHECKPOINT;'",
+            timeout=120)
+
     def _run_pgbench(self, phase: str) -> Dict[str, float]:
         """Запуск pgbench с логированием прогресса TPS"""
         cfg_phase = self.cfg[phase]
         progress_sec = cfg_phase.get("progress_sec", 0)
+
+        if phase == 'test':
+            self._pg_vacuum()
+            self._pg_checkpoint()
 
         cmd_parts = [
             f"docker exec -e PGPASSWORD={self.cfg['db_password']} {self.cfg['client_container_name']}",
@@ -251,7 +307,18 @@ SELECT json_build_object(
                 params[name] = str(trial.suggest_float(name=name, low=spec["low"], high=spec["high"]))
 
         logging.info("%s\n[Trial %d] Config: %s", "=" * 40, trial.number, params)
-        self._start_db_container(params)
+
+        # Восстановление из кэша или полная инициализация БД
+        if self.cfg.get("cache_enabled", True):
+            self._cleanup()
+            PostgresMaintenance._restore_db_from_copy(self)
+            self._start_db_container(params)
+            # self._restore_db_cache()  # Быстрая распаковка (~10 сек)
+        else:
+            self._start_db_container(params)
+            # инициализация с нуля (только если кэш отключён)
+            # self._init_db()
+
         self._start_client_container()
         self._wait_ready()
 
@@ -297,7 +364,9 @@ SELECT json_build_object(
         self._start_db_container({})
         self._start_client_container()
         self._wait_ready()
-        self._init_db()
+        # self._init_db()
+        # if self.cfg.get("cache_enabled", False):
+        #     self._create_db_cache()
         self._cleanup()
 
         target_col = self.cfg["optimization_target"]

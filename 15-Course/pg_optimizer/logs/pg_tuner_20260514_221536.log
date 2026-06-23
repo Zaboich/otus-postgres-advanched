@@ -1,0 +1,126 @@
+2026-05-14 22:15:36,853 | INFO     | 🚀 Запуск оптимизации (ID: 20260514_221536)
+2026-05-14 22:15:36,853 | INFO     | 📄 Используемая конфигурация:
+{
+  "docker": {
+    "image": "postgres:18-alpine",
+    "memory": "32G",
+    "cpu": 8,
+    "network": "pg_tuner_net",
+    "db_container": "pg_db",
+    "client_container": "pg_client",
+    "volume": "pg_bench"
+  },
+  "database": {
+    "name": "benchdb",
+    "user": "postgres",
+    "password": "password_test",
+    "pgbench_scale": 100
+  },
+  "pgbench": {
+    "warmup": {
+      "clients": 32,
+      "threads": 2,
+      "time_sec": 5,
+      "command": "default"
+    },
+    "test": {
+      "clients": 64,
+      "threads": 2,
+      "time_sec": 10,
+      "command": "default"
+    },
+    "checked_params": [
+      "tps",
+      "latency average",
+      "number of transactions actually processed",
+      "number of failed transactions"
+    ]
+  },
+  "optimization": {
+    "target": "tps",
+    "n_trials": 5,
+    "tunable_params": {
+      "shared_buffers": {
+        "type": "categorical",
+        "values": [
+          "2GB",
+          "4GB",
+          "8GB"
+        ]
+      },
+      "work_mem": {
+        "type": "int",
+        "low": 4,
+        "high": 64,
+        "step": 4
+      },
+      "maintenance_work_mem": {
+        "type": "int",
+        "low": 64,
+        "high": 1024,
+        "step": 64
+      },
+      "max_parallel_workers_per_gather": {
+        "type": "categorical",
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          7,
+          9,
+          11,
+          13
+        ]
+      },
+      "random_page_cost": {
+        "type": "float",
+        "low": 1.0,
+        "high": 4.0
+      },
+      "effective_cache_size": {
+        "type": "int",
+        "low": 2048,
+        "high": 24576,
+        "step": 2048
+      },
+      "wal_buffers": {
+        "type": "categorical",
+        "values": [
+          "8MB",
+          "16MB",
+          "32MB",
+          "64MB",
+          "128MB",
+          "256MB",
+          "512MB",
+          "1GB"
+        ]
+      },
+      "max_wal_size": {
+        "type": "int",
+        "low": 1024,
+        "high": 4096,
+        "step": 1024
+      }
+    }
+  },
+  "run_id": "20260514_221536",
+  "log_file": "logs/pg_tuner_20260514_221536.log",
+  "results_file": "results/pg_tuner_results_20260514_221536.csv"
+}
+2026-05-14 22:15:36,853 | INFO     | ✅ Конфиг загружен из config.yaml
+2026-05-14 22:15:36,853 | INFO     | Лог:      logs/pg_tuner_20260514_221536.log
+2026-05-14 22:15:36,853 | INFO     | Результаты: results/pg_tuner_results_20260514_221536.csv
+2026-05-14 22:15:36,853 | INFO     | ==================================================
+2026-05-14 22:15:36,853 | INFO     | Параметры поиска оптимальной конфигурации: {'docker_image': 'postgres:18-alpine', 'docker_network': 'pg_tuner_net', 'container_memory': '32G', 'container_cpu': 8, 'db_container_name': 'pg_db', 'client_container_name': 'pg_client', 'volume_name': 'pg_bench', 'db_name': 'benchdb', 'db_user': 'postgres', 'db_password': 'password_test', 'pgbench_scale': 100, 'warmup': {'clients': 32, 'threads': 2, 'time_sec': 5, 'command': 'default'}, 'test': {'clients': 64, 'threads': 2, 'time_sec': 10, 'command': 'default'}, 'checked_params': ['tps', 'latency average', 'number of transactions actually processed', 'number of failed transactions'], 'tunable_params': {'shared_buffers': {'type': 'categorical', 'values': ['2GB', '4GB', '8GB']}, 'work_mem': {'type': 'int', 'low': 4, 'high': 64, 'step': 4}, 'maintenance_work_mem': {'type': 'int', 'low': 64, 'high': 1024, 'step': 64}, 'max_parallel_workers_per_gather': {'type': 'categorical', 'values': [0, 1, 2, 3, 5, 7, 9, 11, 13]}, 'random_page_cost': {'type': 'float', 'low': 1.0, 'high': 4.0}, 'effective_cache_size': {'type': 'int', 'low': 2048, 'high': 24576, 'step': 2048}, 'wal_buffers': {'type': 'categorical', 'values': ['8MB', '16MB', '32MB', '64MB', '128MB', '256MB', '512MB', '1GB']}, 'max_wal_size': {'type': 'int', 'low': 1024, 'high': 4096, 'step': 1024}}, 'optimization_target': 'tps', 'n_trials': 5, 'results_file': 'results/pg_tuner_results_20260514_221536.csv', 'log_file': 'logs/pg_tuner_20260514_221536.log', 'run_id': '20260514_221536'}
+2026-05-14 22:15:36,853 | INFO     | [CMD] docker volume create pg_bench || true
+2026-05-14 22:15:36,866 | INFO     | [CMD] docker network create pg_tuner_net || true
+2026-05-14 22:15:36,881 | INFO     | [INIT] Starting DB for initialization...
+2026-05-14 22:15:36,881 | INFO     | [CLEANUP] Stopping containers & network...
+2026-05-14 22:15:36,881 | INFO     | [CMD] docker stop pg_client || true
+2026-05-14 22:15:36,893 | INFO     | [CMD] docker rm pg_client || true
+2026-05-14 22:15:36,905 | INFO     | [CMD] docker stop pg_db || true
+2026-05-14 22:15:36,917 | INFO     | [CMD] docker rm pg_db || true
+2026-05-14 22:15:36,943 | INFO     | [CMD] docker run -d --name pg_db --network pg_tuner_net --memory 32G --cpus 8 -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine 

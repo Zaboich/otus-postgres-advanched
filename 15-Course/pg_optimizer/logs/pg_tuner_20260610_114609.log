@@ -1,0 +1,183 @@
+2026-06-10 11:46:09,107 | INFO     | 🚀 Запуск оптимизации (ID: 20260610_114609)
+2026-06-10 11:46:09,108 | INFO     | 📄 Используемая конфигурация:
+{
+  "docker": {
+    "image": "postgres:18-alpine",
+    "memory": "24G",
+    "cpu": 8,
+    "network": "pg_tuner_net",
+    "db_container": "pg_db",
+    "client_container": "pg_client",
+    "volume": "pg_bench"
+  },
+  "database": {
+    "name": "benchdb",
+    "user": "postgres",
+    "password": "password_test",
+    "pgbench_scale": 10000
+  },
+  "pgbench": {
+    "warmup": {
+      "clients": 32,
+      "threads": 2,
+      "time_sec": 120,
+      "progress_sec": 30,
+      "command": "default"
+    },
+    "test": {
+      "clients": 64,
+      "threads": 2,
+      "time_sec": 600,
+      "progress_sec": 60,
+      "command": "default"
+    },
+    "checked_params": [
+      "tps",
+      "latency average",
+      "number of transactions actually processed",
+      "number of failed transactions"
+    ]
+  },
+  "optimization": {
+    "target": "tps",
+    "n_trials": 100,
+    "tunable_params": {
+      "shared_buffers": {
+        "type": "categorical",
+        "values": [
+          "2GB",
+          "4GB",
+          "6GB"
+        ]
+      },
+      "effective_cache_size": {
+        "type": "categorical",
+        "values": [
+          "10GB",
+          "14GB",
+          "18GB"
+        ]
+      },
+      "work_mem": {
+        "type": "int",
+        "low": 2,
+        "high": 20,
+        "step": 6
+      },
+      "maintenance_work_mem": {
+        "type": "categorical",
+        "values": [
+          "32MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_parallel_workers_per_gather": {
+        "type": "categorical",
+        "values": [
+          2,
+          4,
+          6
+        ]
+      },
+      "random_page_cost": {
+        "type": "float",
+        "low": 1.0,
+        "high": 1.0
+      },
+      "wal_buffers": {
+        "type": "categorical",
+        "values": [
+          "64MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_wal_size": {
+        "type": "int",
+        "low": 2048,
+        "high": 8192,
+        "step": 2048
+      }
+    }
+  },
+  "run_id": "20260610_114609",
+  "cache_enabled": true,
+  "log_file": "logs/pg_tuner_20260610_114609.log",
+  "results_file": "results/pg_tuner_results_20260610_114609.csv"
+}
+2026-06-10 11:46:09,108 | INFO     | ✅ Конфиг загружен из config.yaml
+2026-06-10 11:46:09,108 | INFO     | Лог:      logs/pg_tuner_20260610_114609.log
+2026-06-10 11:46:09,109 | INFO     | Результаты: results/pg_tuner_results_20260610_114609.csv
+2026-06-10 11:46:09,109 | INFO     | ==================================================
+2026-06-10 11:46:09,109 | INFO     | Параметры поиска оптимальной конфигурации: {'docker_image': 'postgres:18-alpine', 'docker_network': 'pg_tuner_net', 'container_memory': '24G', 'container_cpu': 8, 'db_container_name': 'pg_db', 'client_container_name': 'pg_client', 'volume_name': 'pg_bench', 'db_name': 'benchdb', 'db_user': 'postgres', 'db_password': 'password_test', 'pgbench_scale': 10000, 'warmup': {'clients': 32, 'threads': 2, 'time_sec': 120, 'progress_sec': 30, 'command': 'default'}, 'test': {'clients': 64, 'threads': 2, 'time_sec': 600, 'progress_sec': 60, 'command': 'default'}, 'checked_params': ['tps', 'latency average', 'number of transactions actually processed', 'number of failed transactions'], 'tunable_params': {'shared_buffers': {'type': 'categorical', 'values': ['2GB', '4GB', '6GB']}, 'effective_cache_size': {'type': 'categorical', 'values': ['10GB', '14GB', '18GB']}, 'work_mem': {'type': 'int', 'low': 2, 'high': 20, 'step': 6}, 'maintenance_work_mem': {'type': 'categorical', 'values': ['32MB', '128MB', '256MB']}, 'max_parallel_workers_per_gather': {'type': 'categorical', 'values': [2, 4, 6]}, 'random_page_cost': {'type': 'float', 'low': 1.0, 'high': 1.0}, 'wal_buffers': {'type': 'categorical', 'values': ['64MB', '128MB', '256MB']}, 'max_wal_size': {'type': 'int', 'low': 2048, 'high': 8192, 'step': 2048}}, 'optimization_target': 'tps', 'n_trials': 100, 'results_file': 'results/pg_tuner_results_20260610_114609.csv', 'log_file': 'logs/pg_tuner_20260610_114609.log', 'run_id': '20260610_114609'}
+2026-06-10 11:46:09,109 | INFO     | [CMD] docker volume create pg_bench || true
+2026-06-10 11:46:09,136 | INFO     | [CMD] docker network create pg_tuner_net || true
+2026-06-10 11:46:09,161 | INFO     | [INIT] Starting DB for initialization...
+2026-06-10 11:46:09,161 | INFO     | [CLEANUP] Stopping containers & network...
+2026-06-10 11:46:09,161 | INFO     | [CMD] docker stop pg_client || true
+2026-06-10 11:46:19,353 | INFO     | [CMD] docker rm pg_client || true
+2026-06-10 11:46:19,388 | INFO     | [CMD] docker stop pg_db || true
+2026-06-10 11:46:19,414 | INFO     | [CMD] docker rm pg_db || true
+2026-06-10 11:46:19,448 | INFO     | [CMD] docker run -d --name pg_db --network pg_tuner_net --memory 24G --cpus 8 -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine 
+2026-06-10 11:46:19,835 | INFO     | [CMD] docker run -d --name pg_client --network pg_tuner_net --memory 2G --cpus 2 postgres:18-alpine tail -f /dev/null
+2026-06-10 11:46:22,246 | INFO     | [DB] Waiting for PostgreSQL to be ready...
+2026-06-10 11:46:22,246 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:23,280 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:24,314 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:25,351 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:26,384 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:27,419 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:28,454 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:29,487 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:30,522 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:31,556 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:32,587 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:33,622 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:34,656 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:35,690 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:36,724 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:37,759 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:38,794 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:39,828 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:40,856 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:41,892 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:42,927 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:43,960 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:44,990 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:46,018 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:47,047 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:48,076 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:49,106 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:50,137 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:51,169 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:52,206 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:53,242 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:54,279 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:55,315 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:56,350 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:57,384 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:58,419 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:46:59,455 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:00,485 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:01,520 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:02,554 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:03,586 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:04,620 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:05,655 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:06,690 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:07,725 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:08,760 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:09,794 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:10,830 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:11,860 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:12,895 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:13,930 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:14,961 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:15,995 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:17,024 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:18,058 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:19,092 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:20,122 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:21,155 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 11:47:22,189 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1

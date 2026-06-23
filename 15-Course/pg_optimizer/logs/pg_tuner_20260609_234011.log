@@ -1,0 +1,113 @@
+2026-06-09 23:40:11,957 | INFO     | 🚀 Запуск оптимизации (ID: 20260609_234011)
+2026-06-09 23:40:11,958 | INFO     | 📄 Используемая конфигурация:
+{
+  "docker": {
+    "image": "postgres:18-alpine",
+    "memory": "24G",
+    "cpu": 8,
+    "network": "pg_tuner_net",
+    "db_container": "pg_db",
+    "client_container": "pg_client",
+    "volume": "pg_bench"
+  },
+  "database": {
+    "name": "benchdb",
+    "user": "postgres",
+    "password": "password_test",
+    "pgbench_scale": 10000
+  },
+  "pgbench": {
+    "warmup": {
+      "clients": 32,
+      "threads": 2,
+      "time_sec": 120,
+      "progress_sec": 30,
+      "command": "default"
+    },
+    "test": {
+      "clients": 64,
+      "threads": 2,
+      "time_sec": 600,
+      "progress_sec": 60,
+      "command": "default"
+    },
+    "checked_params": [
+      "tps",
+      "latency average",
+      "number of transactions actually processed",
+      "number of failed transactions"
+    ]
+  },
+  "optimization": {
+    "target": "tps",
+    "n_trials": 100,
+    "tunable_params": {
+      "shared_buffers": {
+        "type": "categorical",
+        "values": [
+          "2GB",
+          "4GB",
+          "6GB"
+        ]
+      },
+      "effective_cache_size": {
+        "type": "categorical",
+        "values": [
+          "10GB",
+          "14GB",
+          "18GB"
+        ]
+      },
+      "work_mem": {
+        "type": "int",
+        "low": 2,
+        "high": 20,
+        "step": 6
+      },
+      "maintenance_work_mem": {
+        "type": "categorical",
+        "values": [
+          "32MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_parallel_workers_per_gather": {
+        "type": "categorical",
+        "values": [
+          2,
+          4,
+          6
+        ]
+      },
+      "random_page_cost": {
+        "type": "float",
+        "low": 1.0,
+        "high": 1.0
+      },
+      "wal_buffers": {
+        "type": "categorical",
+        "values": [
+          "64MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_wal_size": {
+        "type": "int",
+        "low": 2048,
+        "high": 8192,
+        "step": 2048
+      }
+    }
+  },
+  "run_id": "20260609_234011",
+  "log_file": "logs/pg_tuner_20260609_234011.log",
+  "results_file": "results/pg_tuner_results_20260609_234011.csv"
+}
+2026-06-09 23:40:11,958 | INFO     | ✅ Конфиг загружен из config.yaml
+2026-06-09 23:40:11,958 | INFO     | Лог:      logs/pg_tuner_20260609_234011.log
+2026-06-09 23:40:11,958 | INFO     | Результаты: results/pg_tuner_results_20260609_234011.csv
+2026-06-09 23:40:11,958 | INFO     | ==================================================
+2026-06-09 23:40:11,958 | INFO     | [CACHE] Creating cache of initialized DB...
+2026-06-09 23:40:11,958 | INFO     | [CMD] docker run --rm -v pg_bench:/pg_data -v /home/andrey/1.websites/1Develop/postgres/Курс.PostgresSQL.Advanced/15-Course/pg_optimizer/cache:/pg_copy alpine cp -r /pg_data /pg_copy/pg_bench_s10000  

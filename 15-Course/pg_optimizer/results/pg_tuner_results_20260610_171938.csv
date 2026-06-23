@@ -1,0 +1,4 @@
+blk_read_time,blk_write_time,checkpoints_req,checkpoints_timed,deadlocks,effective_cache_size,latency average,maintenance_work_mem,max_parallel_workers_per_gather,max_wal_size,number of failed transactions,number of transactions actually processed,random_page_cost,shared_buffers,temp_bytes,tps,trial,wal_buffers,work_mem
+0.0,0.0,4889.0,161.0,0.0,10GB,17.084,32MB,4,4096MB,0.0,2242856.0,1.0,4GB,20040171520.0,3739.445816,0,64MB,2MB
+0.0,0.0,4878.0,161.0,0.0,10GB,17.603,128MB,4,8192MB,0.0,2176711.0,1.0,2GB,20040171520.0,3629.236184,1,64MB,8MB
+0.0,0.0,4879.0,161.0,0.0,14GB,17.283,256MB,4,8192MB,0.0,2216937.0,1.0,2GB,20040171520.0,3696.284088,2,128MB,2MB

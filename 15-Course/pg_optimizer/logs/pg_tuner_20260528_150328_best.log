@@ -1,0 +1,33 @@
+{'shared_buffers': '10GB', 'work_mem': '4MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'random_page_cost': '1.1066253973163394', 'effective_cache_size': '8192MB', 'wal_buffers': '128MB', 'max_wal_size': '4096MB'}
+Running pgbench (warmup) from client container...
+{'shared_buffers': '10GB', 'work_mem': '4MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'random_page_cost': '1.1066253973163394', 'effective_cache_size': '8192MB', 'wal_buffers': '128MB', 'max_wal_size': '4096MB'}
+Running pgbench (warmup) from client container...
+pgbench (18.1)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10000
+query mode: simple
+number of clients: 32
+number of threads: 2
+maximum number of tries: 1
+duration: 120 s
+number of transactions actually processed: 490574
+number of failed transactions: 0 (0.000%)
+latency average = 7.803 ms
+latency stddev = 4.530 ms
+initial connection time = 128.506 ms
+tps = 4091.939459 (without initial connection time)
+Running pgbench Tests from client container...
+pgbench (18.1)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10000
+query mode: simple
+number of clients: 64
+number of threads: 2
+maximum number of tries: 1
+duration: 600 s
+number of transactions actually processed: 2779142
+number of failed transactions: 0 (0.000%)
+latency average = 13.779 ms
+latency stddev = 6.966 ms
+initial connection time = 275.809 ms
+tps = 4633.954020 (without initial connection time)

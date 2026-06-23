@@ -1,0 +1,231 @@
+2026-06-10 13:02:37,965 | INFO     | 🚀 Запуск оптимизации (ID: 20260610_130237)
+2026-06-10 13:02:37,965 | INFO     | 📄 Используемая конфигурация:
+{
+  "docker": {
+    "image": "postgres:18-alpine",
+    "memory": "24G",
+    "cpu": 8,
+    "network": "pg_tuner_net",
+    "db_container": "pg_db",
+    "client_container": "pg_client",
+    "volume": "pg_bench"
+  },
+  "database": {
+    "name": "benchdb",
+    "user": "postgres",
+    "password": "password_test",
+    "pgbench_scale": 10000
+  },
+  "pgbench": {
+    "warmup": {
+      "clients": 32,
+      "threads": 2,
+      "time_sec": 120,
+      "progress_sec": 30,
+      "command": "default"
+    },
+    "test": {
+      "clients": 64,
+      "threads": 2,
+      "time_sec": 600,
+      "progress_sec": 60,
+      "command": "default"
+    },
+    "checked_params": [
+      "tps",
+      "latency average",
+      "number of transactions actually processed",
+      "number of failed transactions"
+    ]
+  },
+  "optimization": {
+    "target": "tps",
+    "n_trials": 100,
+    "tunable_params": {
+      "shared_buffers": {
+        "type": "categorical",
+        "values": [
+          "2GB",
+          "4GB",
+          "6GB"
+        ]
+      },
+      "effective_cache_size": {
+        "type": "categorical",
+        "values": [
+          "10GB",
+          "14GB",
+          "18GB"
+        ]
+      },
+      "work_mem": {
+        "type": "int",
+        "low": 2,
+        "high": 20,
+        "step": 6
+      },
+      "maintenance_work_mem": {
+        "type": "categorical",
+        "values": [
+          "32MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_parallel_workers_per_gather": {
+        "type": "categorical",
+        "values": [
+          2,
+          4,
+          6
+        ]
+      },
+      "random_page_cost": {
+        "type": "float",
+        "low": 1.0,
+        "high": 1.0
+      },
+      "wal_buffers": {
+        "type": "categorical",
+        "values": [
+          "64MB",
+          "128MB",
+          "256MB"
+        ]
+      },
+      "max_wal_size": {
+        "type": "int",
+        "low": 2048,
+        "high": 8192,
+        "step": 2048
+      }
+    }
+  },
+  "run_id": "20260610_130237",
+  "cache_enabled": true,
+  "log_file": "logs/pg_tuner_20260610_130237.log",
+  "results_file": "results/pg_tuner_results_20260610_130237.csv"
+}
+2026-06-10 13:02:37,966 | INFO     | ✅ Конфиг загружен из config.yaml
+2026-06-10 13:02:37,966 | INFO     | Лог:      logs/pg_tuner_20260610_130237.log
+2026-06-10 13:02:37,966 | INFO     | Результаты: results/pg_tuner_results_20260610_130237.csv
+2026-06-10 13:02:37,966 | INFO     | ==================================================
+2026-06-10 13:02:37,966 | INFO     | Параметры поиска оптимальной конфигурации: {'docker_image': 'postgres:18-alpine', 'docker_network': 'pg_tuner_net', 'container_memory': '24G', 'container_cpu': 8, 'db_container_name': 'pg_db', 'client_container_name': 'pg_client', 'volume_name': 'pg_bench', 'db_name': 'benchdb', 'db_user': 'postgres', 'db_password': 'password_test', 'pgbench_scale': 10000, 'warmup': {'clients': 32, 'threads': 2, 'time_sec': 120, 'progress_sec': 30, 'command': 'default'}, 'test': {'clients': 64, 'threads': 2, 'time_sec': 600, 'progress_sec': 60, 'command': 'default'}, 'checked_params': ['tps', 'latency average', 'number of transactions actually processed', 'number of failed transactions'], 'tunable_params': {'shared_buffers': {'type': 'categorical', 'values': ['2GB', '4GB', '6GB']}, 'effective_cache_size': {'type': 'categorical', 'values': ['10GB', '14GB', '18GB']}, 'work_mem': {'type': 'int', 'low': 2, 'high': 20, 'step': 6}, 'maintenance_work_mem': {'type': 'categorical', 'values': ['32MB', '128MB', '256MB']}, 'max_parallel_workers_per_gather': {'type': 'categorical', 'values': [2, 4, 6]}, 'random_page_cost': {'type': 'float', 'low': 1.0, 'high': 1.0}, 'wal_buffers': {'type': 'categorical', 'values': ['64MB', '128MB', '256MB']}, 'max_wal_size': {'type': 'int', 'low': 2048, 'high': 8192, 'step': 2048}}, 'optimization_target': 'tps', 'n_trials': 100, 'results_file': 'results/pg_tuner_results_20260610_130237.csv', 'log_file': 'logs/pg_tuner_20260610_130237.log', 'run_id': '20260610_130237'}
+2026-06-10 13:02:37,966 | INFO     | [CMD] docker volume create pg_bench || true
+2026-06-10 13:02:37,981 | INFO     | [CMD] docker network create pg_tuner_net || true
+2026-06-10 13:02:38,085 | INFO     | [INIT] Starting DB for initialization...
+2026-06-10 13:02:38,085 | INFO     | [CLEANUP] Stopping containers & network...
+2026-06-10 13:02:38,086 | INFO     | [CMD] docker stop pg_client || true
+2026-06-10 13:02:38,095 | INFO     | [CMD] docker rm pg_client || true
+2026-06-10 13:02:38,104 | INFO     | [CMD] docker stop pg_db || true
+2026-06-10 13:02:38,113 | INFO     | [CMD] docker rm pg_db || true
+2026-06-10 13:02:38,122 | INFO     | [CMD] docker run -d --name pg_db --network pg_tuner_net --memory 24G --cpus 8 -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine 
+2026-06-10 13:02:38,434 | INFO     | [CMD] docker run -d --name pg_client --network pg_tuner_net --memory 2G --cpus 2 postgres:18-alpine tail -f /dev/null
+2026-06-10 13:02:40,740 | INFO     | [DB] Waiting for PostgreSQL to be ready...
+2026-06-10 13:02:40,740 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 13:02:40,808 | INFO     | [DB] PostgreSQL is ready.
+2026-06-10 13:02:43,808 | INFO     | [CLEANUP] Stopping containers & network...
+2026-06-10 13:02:43,808 | INFO     | [CMD] docker stop pg_client || true
+2026-06-10 13:02:54,014 | INFO     | [CMD] docker rm pg_client || true
+2026-06-10 13:02:54,043 | INFO     | [CMD] docker stop pg_db || true
+2026-06-10 13:02:54,333 | INFO     | [CMD] docker rm pg_db || true
+2026-06-10 13:02:54,362 | INFO     | ========================================
+[Trial 0] Config: {'shared_buffers': '4GB', 'effective_cache_size': '10GB', 'work_mem': '2MB', 'maintenance_work_mem': '32MB', 'max_parallel_workers_per_gather': 4, 'random_page_cost': '1.0', 'wal_buffers': '64MB', 'max_wal_size': '4096MB'}
+2026-06-10 13:02:54,362 | INFO     | [CACHE] Restoring DB from cache...
+2026-06-10 13:02:54,362 | INFO     | [CMD] docker run --rm -v pg_bench:/pg_data -v /home/andrey/1.websites/1Develop/postgres/Курс.PostgresSQL.Advanced/15-Course/pg_optimizer/pg_copy:/pg_copy alpine sh -c 'rm -rf /pg_data/* && cp -r /pg_copy/pg_bench_s10000/. /pg_data/ && chown -R 70:70 /pg_data'
+2026-06-10 13:06:10,837 | INFO     | [CLEANUP] Stopping containers & network...
+2026-06-10 13:06:10,837 | INFO     | [CMD] docker stop pg_client || true
+2026-06-10 13:06:10,847 | INFO     | [CMD] docker rm pg_client || true
+2026-06-10 13:06:10,857 | INFO     | [CMD] docker stop pg_db || true
+2026-06-10 13:06:10,866 | INFO     | [CMD] docker rm pg_db || true
+2026-06-10 13:06:10,875 | INFO     | [CMD] docker run -d --name pg_db --network pg_tuner_net --memory 24G --cpus 8 -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=4GB -c effective_cache_size=10GB -c work_mem=2MB -c maintenance_work_mem=32MB -c max_parallel_workers_per_gather=4 -c random_page_cost=1.0 -c wal_buffers=64MB -c max_wal_size=4096MB
+2026-06-10 13:06:11,203 | INFO     | [CMD] docker run -d --name pg_client --network pg_tuner_net --memory 2G --cpus 2 postgres:18-alpine tail -f /dev/null
+2026-06-10 13:06:13,546 | INFO     | [DB] Waiting for PostgreSQL to be ready...
+2026-06-10 13:06:13,546 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 13:06:13,617 | INFO     | [DB] PostgreSQL is ready.
+2026-06-10 13:06:16,618 | INFO     | [TEST] Running pgbench (warmup) from client container...
+2026-06-10 13:06:16,618 | INFO     | [CMD] docker exec -e PGPASSWORD=password_test pg_client pgbench -U postgres -h pg_db -c 32 -j 2 -T 120 -P 30 benchdb
+2026-06-10 13:08:16,747 | INFO     | [PG_PROGRESS] progress: 30.0 s, 4053.8 tps, lat 7.839 ms stddev 6.399, 0 failed
+2026-06-10 13:08:16,747 | INFO     | [PG_PROGRESS] progress: 60.0 s, 2438.4 tps, lat 13.107 ms stddev 6.675, 0 failed
+2026-06-10 13:08:16,748 | INFO     | [PG_PROGRESS] progress: 90.0 s, 2247.7 tps, lat 14.219 ms stddev 7.035, 0 failed
+2026-06-10 13:08:16,748 | INFO     | [PG_PROGRESS] progress: 120.0 s, 2163.2 tps, lat 14.775 ms stddev 6.484, 0 failed
+2026-06-10 13:08:16,748 | INFO     | [DB] Waiting for PostgreSQL to be VACUUM ANALYZE
+2026-06-10 13:08:16,748 | INFO     | [CMD] docker exec pg_db psql -U postgres -d benchdb -c 'VACUUM ANALYZE;'
+2026-06-10 13:09:48,604 | INFO     | [DB] PostgreSQL CHECKPOINT
+2026-06-10 13:09:48,604 | INFO     | [CMD] docker exec pg_db psql -U postgres -d benchdb -c 'CHECKPOINT;'
+2026-06-10 13:09:52,479 | INFO     | [TEST] Running pgbench (test) from client container...
+2026-06-10 13:09:52,479 | INFO     | [CMD] docker exec -e PGPASSWORD=password_test pg_client pgbench -U postgres -h pg_db -c 64 -j 2 -T 600 -P 60 benchdb
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 60.0 s, 3936.2 tps, lat 16.118 ms stddev 3.784, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 120.0 s, 3607.5 tps, lat 17.711 ms stddev 5.400, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 180.0 s, 3595.1 tps, lat 17.773 ms stddev 5.597, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 240.0 s, 3608.3 tps, lat 17.707 ms stddev 5.112, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 300.0 s, 3559.0 tps, lat 17.950 ms stddev 5.790, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 360.0 s, 3472.4 tps, lat 18.384 ms stddev 15.940, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 420.0 s, 3591.5 tps, lat 17.784 ms stddev 6.036, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 480.0 s, 3504.3 tps, lat 18.231 ms stddev 6.333, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 540.0 s, 3418.5 tps, lat 18.680 ms stddev 21.349, 0 failed
+2026-06-10 13:19:52,597 | INFO     | [PG_PROGRESS] progress: 600.0 s, 3466.9 tps, lat 18.427 ms stddev 10.612, 0 failed
+2026-06-10 13:19:52,598 | INFO     | [CMD] docker exec pg_db psql -q -U postgres -d benchdb -t -A -c "
+SELECT json_build_object(
+    'checkpoints_req', c.num_requested,
+    'checkpoints_timed', c.num_timed,
+    'deadlocks', d.deadlocks,
+    'temp_bytes', d.temp_bytes,
+    'blk_read_time', d.blk_read_time,
+    'blk_write_time', d.blk_write_time
+    ) FROM pg_stat_checkpointer c, pg_stat_database d 
+    WHERE d.datname =  'benchdb';
+        "
+2026-06-10 13:19:52,940 | INFO     | [Trial 0] tps: 3577.39 | PG Checkpoints Req: 4887
+2026-06-10 13:19:52,943 | INFO     | ========================================
+[Trial 1] Config: {'shared_buffers': '2GB', 'effective_cache_size': '10GB', 'work_mem': '8MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 4, 'random_page_cost': '1.0', 'wal_buffers': '64MB', 'max_wal_size': '8192MB'}
+2026-06-10 13:19:52,943 | INFO     | [CACHE] Restoring DB from cache...
+2026-06-10 13:19:52,943 | INFO     | [CMD] docker run --rm -v pg_bench:/pg_data -v /home/andrey/1.websites/1Develop/postgres/Курс.PostgresSQL.Advanced/15-Course/pg_optimizer/pg_copy:/pg_copy alpine sh -c 'rm -rf /pg_data/* && cp -r /pg_copy/pg_bench_s10000/. /pg_data/ && chown -R 70:70 /pg_data'
+2026-06-10 13:24:12,858 | INFO     | [CLEANUP] Stopping containers & network...
+2026-06-10 13:24:12,858 | INFO     | [CMD] docker stop pg_client || true
+2026-06-10 13:24:23,058 | INFO     | [CMD] docker rm pg_client || true
+2026-06-10 13:24:23,084 | INFO     | [CMD] docker stop pg_db || true
+2026-06-10 13:24:23,094 | INFO     | [CMD] docker rm pg_db || true
+2026-06-10 13:24:23,118 | INFO     | [CMD] docker run -d --name pg_db --network pg_tuner_net --memory 24G --cpus 8 -u postgres -e POSTGRES_PASSWORD=password_test -e POSTGRES_USER=postgres -p 5432:5432 -v pg_bench:/var/lib/postgresql/data postgres:18-alpine -c shared_buffers=2GB -c effective_cache_size=10GB -c work_mem=8MB -c maintenance_work_mem=128MB -c max_parallel_workers_per_gather=4 -c random_page_cost=1.0 -c wal_buffers=64MB -c max_wal_size=8192MB
+2026-06-10 13:24:23,430 | INFO     | [CMD] docker run -d --name pg_client --network pg_tuner_net --memory 2G --cpus 2 postgres:18-alpine tail -f /dev/null
+2026-06-10 13:24:25,795 | INFO     | [DB] Waiting for PostgreSQL to be ready...
+2026-06-10 13:24:25,795 | INFO     | [CMD] docker exec pg_db pg_isready -U postgres -h 127.0.0.1
+2026-06-10 13:24:25,862 | INFO     | [DB] PostgreSQL is ready.
+2026-06-10 13:24:28,862 | INFO     | [TEST] Running pgbench (warmup) from client container...
+2026-06-10 13:24:28,862 | INFO     | [CMD] docker exec -e PGPASSWORD=password_test pg_client pgbench -U postgres -h pg_db -c 32 -j 2 -T 120 -P 30 benchdb
+2026-06-10 13:26:29,028 | INFO     | [PG_PROGRESS] progress: 30.0 s, 5431.6 tps, lat 5.850 ms stddev 5.002, 0 failed
+2026-06-10 13:26:29,029 | INFO     | [PG_PROGRESS] progress: 60.0 s, 2270.0 tps, lat 14.080 ms stddev 7.808, 0 failed
+2026-06-10 13:26:29,029 | INFO     | [PG_PROGRESS] progress: 90.0 s, 2220.2 tps, lat 14.391 ms stddev 8.442, 0 failed
+2026-06-10 13:26:29,029 | INFO     | [PG_PROGRESS] progress: 120.0 s, 2192.6 tps, lat 14.572 ms stddev 9.180, 0 failed
+2026-06-10 13:26:29,029 | INFO     | [DB] Waiting for PostgreSQL to be VACUUM ANALYZE
+2026-06-10 13:26:29,029 | INFO     | [CMD] docker exec pg_db psql -U postgres -d benchdb -c 'VACUUM ANALYZE;'
+2026-06-10 13:28:35,383 | INFO     | [DB] PostgreSQL CHECKPOINT
+2026-06-10 13:28:35,383 | INFO     | [CMD] docker exec pg_db psql -U postgres -d benchdb -c 'CHECKPOINT;'
+2026-06-10 13:28:39,279 | INFO     | [TEST] Running pgbench (test) from client container...
+2026-06-10 13:28:39,279 | INFO     | [CMD] docker exec -e PGPASSWORD=password_test pg_client pgbench -U postgres -h pg_db -c 64 -j 2 -T 600 -P 60 benchdb
+2026-06-10 13:38:39,438 | INFO     | [PG_PROGRESS] progress: 60.0 s, 3868.9 tps, lat 16.417 ms stddev 4.169, 0 failed
+2026-06-10 13:38:39,438 | INFO     | [PG_PROGRESS] progress: 120.0 s, 4123.6 tps, lat 15.489 ms stddev 16.077, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 180.0 s, 3274.3 tps, lat 19.513 ms stddev 23.052, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 240.0 s, 3666.2 tps, lat 17.429 ms stddev 4.328, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 300.0 s, 3328.3 tps, lat 19.200 ms stddev 8.698, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 360.0 s, 3432.2 tps, lat 18.617 ms stddev 7.568, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 420.0 s, 3720.8 tps, lat 17.169 ms stddev 4.563, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 480.0 s, 3410.1 tps, lat 18.738 ms stddev 7.613, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 540.0 s, 3345.3 tps, lat 19.100 ms stddev 7.952, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [PG_PROGRESS] progress: 600.0 s, 3658.3 tps, lat 17.446 ms stddev 5.032, 0 failed
+2026-06-10 13:38:39,439 | INFO     | [CMD] docker exec pg_db psql -q -U postgres -d benchdb -t -A -c "
+SELECT json_build_object(
+    'checkpoints_req', c.num_requested,
+    'checkpoints_timed', c.num_timed,
+    'deadlocks', d.deadlocks,
+    'temp_bytes', d.temp_bytes,
+    'blk_read_time', d.blk_read_time,
+    'blk_write_time', d.blk_write_time
+    ) FROM pg_stat_checkpointer c, pg_stat_database d 
+    WHERE d.datname =  'benchdb';
+        "
+2026-06-10 13:38:39,712 | INFO     | [Trial 1] tps: 3584.11 | PG Checkpoints Req: 4878
+2026-06-10 13:38:39,713 | INFO     | ========================================
+[Trial 2] Config: {'shared_buffers': '2GB', 'effective_cache_size': '14GB', 'work_mem': '2MB', 'maintenance_work_mem': '256MB', 'max_parallel_workers_per_gather': 4, 'random_page_cost': '1.0', 'wal_buffers': '128MB', 'max_wal_size': '8192MB'}
+2026-06-10 13:38:39,714 | INFO     | [CACHE] Restoring DB from cache...
+2026-06-10 13:38:39,714 | INFO     | [CMD] docker run --rm -v pg_bench:/pg_data -v /home/andrey/1.websites/1Develop/postgres/Курс.PostgresSQL.Advanced/15-Course/pg_optimizer/pg_copy:/pg_copy alpine sh -c 'rm -rf /pg_data/* && cp -r /pg_copy/pg_bench_s10000/. /pg_data/ && chown -R 70:70 /pg_data'

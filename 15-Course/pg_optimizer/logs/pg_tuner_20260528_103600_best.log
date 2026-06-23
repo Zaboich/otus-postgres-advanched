@@ -1,0 +1,14 @@
+pgbench (18.1)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10000
+query mode: simple
+number of clients: 64
+number of threads: 2
+maximum number of tries: 1
+duration: 600 s
+number of transactions actually processed: 2263157
+number of failed transactions: 0 (0.000%)
+latency average = 16.928 ms
+latency stddev = 10.392 ms
+initial connection time = 294.239 ms
+tps = 3773.662973 (without initial connection time)

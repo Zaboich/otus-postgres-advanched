@@ -1,0 +1,38 @@
+2026-05-28 17:19:31.013 UTC [1] LOG:  starting PostgreSQL 18.1 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-05-28 17:19:31.013 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-05-28 17:19:31.013 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-05-28 17:19:31.025 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-05-28 17:19:31.040 UTC [25] LOG:  database system was shut down at 2026-05-28 17:19:28 UTC
+2026-05-28 17:19:31.049 UTC [1] LOG:  database system is ready to accept connections
+2026-05-28 17:21:30.867 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:23:06.301 UTC [23] LOG:  checkpoint complete: wrote 80808 buffers (30.8%), wrote 263 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=86.572 s, sync=2.339 s, total=95.434 s; sync files=167, longest=0.327 s, average=0.014 s; distance=4402185 kB, estimate=4402185 kB; lsn=5C7/86CCD470, redo lsn=5C6/9302D558
+2026-05-28 17:23:14.057 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:25:03.569 UTC [23] LOG:  checkpoint complete: wrote 47525 buffers (18.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=102.393 s, sync=1.299 s, total=109.512 s; sync files=157, longest=0.319 s, average=0.009 s; distance=4407208 kB, estimate=4407208 kB; lsn=5C8/9364B498, redo lsn=5C7/A0017698
+2026-05-28 17:25:11.454 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:27:08.028 UTC [23] LOG:  checkpoint complete: wrote 19579 buffers (7.5%), wrote 0 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=108.477 s, sync=1.617 s, total=116.574 s; sync files=45, longest=0.335 s, average=0.036 s; distance=4407448 kB, estimate=4407448 kB; lsn=5C9/A038FF80, redo lsn=5C8/AD03D830
+2026-05-28 17:27:16.247 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:29:13.638 UTC [23] LOG:  checkpoint complete: wrote 21830 buffers (8.3%), wrote 0 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=108.871 s, sync=2.038 s, total=117.391 s; sync files=46, longest=0.426 s, average=0.045 s; distance=4407094 kB, estimate=4407412 kB; lsn=5CA/AD605F30, redo lsn=5C9/BA00B158
+2026-05-28 17:29:21.656 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:31:18.196 UTC [23] LOG:  checkpoint complete: wrote 21629 buffers (8.3%), wrote 0 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=108.651 s, sync=1.624 s, total=116.540 s; sync files=45, longest=0.301 s, average=0.037 s; distance=4407282 kB, estimate=4407399 kB; lsn=5CB/BA457BE8, redo lsn=5CA/C7007A00
+2026-05-28 17:31:26.081 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:33:23.926 UTC [23] LOG:  checkpoint complete: wrote 21569 buffers (8.2%), wrote 0 SLRU buffers; 0 WAL file(s) added, 1 removed, 268 recycled; write=109.479 s, sync=1.826 s, total=117.845 s; sync files=45, longest=0.327 s, average=0.041 s; distance=4407273 kB, estimate=4407387 kB; lsn=5CC/C7705880, redo lsn=5CB/D40021C8
+2026-05-28 17:33:30.701 UTC [23] LOG:  checkpoint starting: immediate force wait
+2026-05-28 17:33:33.013 UTC [23] LOG:  checkpoint complete: wrote 20894 buffers (8.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 263 recycled; write=0.169 s, sync=0.452 s, total=2.312 s; sync files=40, longest=0.228 s, average=0.012 s; distance=4309609 kB, estimate=4397609 kB; lsn=5CC/DB09C7D8, redo lsn=5CC/DB09C780
+2026-05-28 17:35:18.935 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:37:04.964 UTC [23] LOG:  checkpoint complete: wrote 21248 buffers (8.1%), wrote 261 SLRU buffers; 0 WAL file(s) added, 4 removed, 265 recycled; write=96.320 s, sync=2.830 s, total=106.029 s; sync files=170, longest=0.044 s, average=0.017 s; distance=4407096 kB, estimate=4407096 kB; lsn=5CE/DED392E8, redo lsn=5CD/E806A858
+2026-05-28 17:37:09.562 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:38:53.848 UTC [23] LOG:  checkpoint complete: wrote 21743 buffers (8.3%), wrote 28 SLRU buffers; 0 WAL file(s) added, 6 removed, 263 recycled; write=94.142 s, sync=3.488 s, total=104.286 s; sync files=163, longest=0.044 s, average=0.022 s; distance=4407385 kB, estimate=4407385 kB; lsn=5CF/ED080938, redo lsn=5CE/F5080D98
+2026-05-28 17:38:57.800 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:40:41.608 UTC [23] LOG:  checkpoint complete: wrote 21784 buffers (8.3%), wrote 27 SLRU buffers; 0 WAL file(s) added, 5 removed, 264 recycled; write=93.175 s, sync=3.541 s, total=103.808 s; sync files=164, longest=0.068 s, average=0.022 s; distance=4407168 kB, estimate=4407363 kB; lsn=5D0/F9F3AE30, redo lsn=5D0/2061010
+2026-05-28 17:40:45.349 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:42:26.927 UTC [23] LOG:  checkpoint complete: wrote 21726 buffers (8.3%), wrote 26 SLRU buffers; 0 WAL file(s) added, 5 removed, 264 recycled; write=91.341 s, sync=3.241 s, total=101.578 s; sync files=162, longest=0.058 s, average=0.020 s; distance=4407309 kB, estimate=4407358 kB; lsn=5D2/6DB60F8, redo lsn=5D1/F064618
+2026-05-28 17:42:30.568 UTC [23] LOG:  checkpoint starting: wal
+2026-05-28 17:43:44.206 UTC [1] LOG:  received fast shutdown request
+2026-05-28 17:43:44.215 UTC [1] LOG:  aborting any active transactions
+2026-05-28 17:43:44.217 UTC [1] LOG:  background worker "logical replication launcher" (PID 28) exited with exit code 1
+2026-05-28 17:43:46.141 UTC [23] LOG:  checkpoint complete: wrote 21680 buffers (8.3%), wrote 26 SLRU buffers; 0 WAL file(s) added, 0 removed, 269 recycled; write=73.637 s, sync=0.084 s, total=75.573 s; sync files=164, longest=0.016 s, average=0.001 s; distance=4407219 kB, estimate=4407344 kB; lsn=5D2/C8130D18, redo lsn=5D2/1C0514D0
+2026-05-28 17:43:46.141 UTC [23] LOG:  shutting down
+2026-05-28 17:43:46.148 UTC [23] LOG:  checkpoint starting: shutdown immediate
+2026-05-28 17:43:48.586 UTC [23] LOG:  checkpoint complete: wrote 129210 buffers (49.3%), wrote 12 SLRU buffers; 0 WAL file(s) added, 0 removed, 172 recycled; write=1.193 s, sync=0.053 s, total=2.445 s; sync files=160, longest=0.037 s, average=0.001 s; distance=2818942 kB, estimate=4248504 kB; lsn=5D2/C8130D90, redo lsn=5D2/C8130D90
+2026-05-28 17:43:48.852 UTC [1] LOG:  database system is shut down
+

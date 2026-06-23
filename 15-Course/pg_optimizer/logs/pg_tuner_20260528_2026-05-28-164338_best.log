@@ -1,0 +1,50 @@
+Error response from daemon: network with name pg_tuner_net already exists
+{'shared_buffers': '10GB', 'work_mem': '4MB', 'maintenance_work_mem': '128MB', 'max_parallel_workers_per_gather': 7, 'random_page_cost': '1.1066253973163394', 'effective_cache_size': '8192MB', 'wal_buffers': '128MB', 'max_wal_size': '4096MB'}
+VACUUM
+Running pgbench (warmup) from client container...
+pgbench (18.1)
+starting vacuum...end.
+progress: 30.0 s, 2755.8 tps, lat 11.542 ms stddev 2.760, 0 failed
+progress: 60.0 s, 2894.3 tps, lat 11.043 ms stddev 2.574, 0 failed
+progress: 90.0 s, 2696.5 tps, lat 11.851 ms stddev 3.493, 0 failed
+progress: 120.0 s, 2768.2 tps, lat 11.546 ms stddev 2.842, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10000
+query mode: simple
+number of clients: 32
+number of threads: 2
+maximum number of tries: 1
+duration: 120 s
+number of transactions actually processed: 333479
+number of failed transactions: 0 (0.000%)
+latency average = 11.488 ms
+latency stddev = 2.945 ms
+initial connection time = 138.932 ms
+tps = 2781.574196 (without initial connection time)
+VACUUM
+Running pgbench Tests from client container...
+pgbench (18.1)
+starting vacuum...end.
+progress: 60.0 s, 5722.6 tps, lat 11.093 ms stddev 4.944, 0 failed
+progress: 120.0 s, 4246.3 tps, lat 15.037 ms stddev 20.708, 0 failed
+progress: 180.0 s, 3984.1 tps, lat 16.034 ms stddev 5.474, 0 failed
+progress: 240.0 s, 4076.4 tps, lat 15.666 ms stddev 6.763, 0 failed
+progress: 300.0 s, 4421.5 tps, lat 14.444 ms stddev 4.493, 0 failed
+progress: 360.0 s, 4269.4 tps, lat 14.957 ms stddev 16.937, 0 failed
+progress: 420.0 s, 4366.4 tps, lat 14.623 ms stddev 3.917, 0 failed
+progress: 480.0 s, 4446.4 tps, lat 14.343 ms stddev 3.826, 0 failed
+progress: 540.0 s, 4009.6 tps, lat 15.949 ms stddev 9.991, 0 failed
+progress: 600.0 s, 4347.2 tps, lat 14.690 ms stddev 5.147, 0 failed
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 10000
+query mode: simple
+number of clients: 64
+number of threads: 2
+maximum number of tries: 1
+duration: 600 s
+number of transactions actually processed: 2633457
+number of failed transactions: 0 (0.000%)
+latency average = 14.542 ms
+latency stddev = 9.921 ms
+initial connection time = 289.073 ms
+tps = 4391.047765 (without initial connection time)
