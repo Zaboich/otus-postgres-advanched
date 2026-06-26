@@ -200,7 +200,7 @@ class PostgresConfigOptimizer:
         logging.info("[DB] Initializing pgbench with scale=%s...", self.cfg['pgbench_scale'])
         cmd = (
             f"docker exec {self.cfg['db_container_name']} bash -c "
-            f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs {self.cfg['db_name']}'"
+            f"'dropdb {self.cfg['db_name']}; createdb {self.cfg['db_name']}; pgbench -iqs  {self.cfg['pgbench_scale']}  {self.cfg['db_name']}'"
         )
         self._run(cmd, timeout=12000)
         self._run(
